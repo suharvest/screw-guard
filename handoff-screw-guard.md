@@ -1,8 +1,8 @@
 # Microduck 缺螺丝工业视觉检测系统 (ScrewGuard) 交接文档
 
 **生成时间**：2026-11-06  
-**项目路径**：`/home/harvest/project/microduck/screw-guard`  
-**核心成果物报告**：[`DELIVERY_REPORT.md`](/home/harvest/project/microduck/screw-guard/DELIVERY_REPORT.md)
+**项目路径**：`screw-guard`  
+**核心成果物报告**：[`DELIVERY_REPORT.md`](DELIVERY_REPORT.md)
 
 ---
 
@@ -24,14 +24,14 @@
 
 | 模块 | 关键文件路径 | 当前状态与关键指标 |
 |---|---|---|
-| **工程规范** | [`SPEC.md`](/home/harvest/project/microduck/screw-guard/SPEC.md) | 规定 1~32 螺孔、$W,H \in [30,1280]$ 整数画布、180° 朝向消歧与四态仲裁 |
-| **应用清单** | [`screw-guard.json`](/home/harvest/project/microduck/screw-guard/screw-guard.json) | Supervisor 原生应用清单，默认提供 4 颗螺孔示例配方 |
-| **原生 C++ 核心库** | [`native/`](/home/harvest/project/microduck/screw-guard/native/) | `build-offline` 构建证据位于 `native/artifacts/final-*.log` |
-| **自动化测试套件** | [`native/test_screw_inspector.cpp`](/home/harvest/project/microduck/screw-guard/native/test_screw_inspector.cpp) | `final-ctest.log` 记录 2/2；保留原 8 个测试套件，并新增几何及横/竖向 2/32 孔用例 |
-| **原生 CLI** | [`native/screw_guard_cli.cpp`](/home/harvest/project/microduck/screw-guard/native/screw_guard_cli.cpp) | 4 种 Web 配方 validate/schema 链路有效；实物整图 inspect 输出 `CANNOT_INSPECT`，不构成精度通过 |
-| **现场标定工具** | [`web/calib.html`](/home/harvest/project/microduck/screw-guard/web/calib.html) | 单文件 0 外部依赖；画布边界为 30~1280 像素整数，比例受画布和图像边界校验 |
-| **Schema 验证器** | [`web/validate_schema.py`](/home/harvest/project/microduck/screw-guard/web/validate_schema.py) | Draft-07 验证入口；当前浏览器 run 的四孔/32 孔导出 schema 证据已记录 |
-| **实物底图与切片** | [`web/test_sample.jpg`](/home/harvest/project/microduck/screw-guard/web/test_sample.jpg) | 原图 750×882 实物切片与螺栓/空孔物理中心对齐数据 |
+| **工程规范** | [`SPEC.md`](SPEC.md) | 规定 1~32 螺孔、$W,H \in [30,1280]$ 整数画布、180° 朝向消歧与四态仲裁 |
+| **应用清单** | [`screw-guard.json`](screw-guard.json) | Supervisor 原生应用清单，默认提供 4 颗螺孔示例配方 |
+| **原生 C++ 核心库** | [`native/`](native/) | `build-offline` 构建证据位于 `native/artifacts/final-*.log` |
+| **自动化测试套件** | [`native/test_screw_inspector.cpp`](native/test_screw_inspector.cpp) | `final-ctest.log` 记录 2/2；保留原 8 个测试套件，并新增几何及横/竖向 2/32 孔用例 |
+| **原生 CLI** | [`native/screw_guard_cli.cpp`](native/screw_guard_cli.cpp) | 4 种 Web 配方 validate/schema 链路有效；实物整图 inspect 输出 `CANNOT_INSPECT`，不构成精度通过 |
+| **现场标定工具** | [`web/calib.html`](web/calib.html) | 单文件 0 外部依赖；画布边界为 30~1280 像素整数，比例受画布和图像边界校验 |
+| **Schema 验证器** | [`web/validate_schema.py`](web/validate_schema.py) | Draft-07 验证入口；当前浏览器 run 的四孔/32 孔导出 schema 证据已记录 |
+| **实物底图与切片** | [`web/test_sample.jpg`](web/test_sample.jpg) | 原图 750×882 实物切片与螺栓/空孔物理中心对齐数据 |
 
 ---
 
@@ -53,7 +53,7 @@
 
 1. **离线交叉编译**：`device/evidence/build-reviewed.log` 记录 exit 0；产物为 ELF64 RISC-V musl double-float，binary SHA-256 为 `3de9bd007ae58a17517db782c59075b0bd33b076746d3a22909a1b1cf0fe2704`。源码输入和 SDK 文件哈希见 `device/evidence/app-source-sha256.txt` 与 `sdk-source-sha256.txt`。
 2. **生命周期与运行库静态核对**：`device/evidence/init-test.log` 覆盖 PID 身份、丢 PID、正常停止和 14 秒超时；`runtime-libraries.txt` 记录库声明/NEEDED。该证据不包含设备部署或真机运行。
-3. **复现入口**：见 [`device/evidence/README.md`](/home/harvest/project/microduck/screw-guard/device/evidence/README.md)。
+3. **复现入口**：见 [`device/evidence/README.md`](device/evidence/README.md)。
 4. **未完成验收**：原生真实图片精度、真机性能/RSS、硬件图像通道、Supervisor/MQTT/WebSocket 和动态库加载仍需在目标设备核实；现场光照按 SPEC 75°~90° 高角度工况执行。
 
 ---

@@ -37,13 +37,13 @@
 以下命令只用于本地证据采集，不表示命令已经在真机执行：
 
 ```sh
-cd /home/harvest/project/microduck/screw-guard/native
+cd native
 cmake -S . -B build-offline -DCMAKE_BUILD_TYPE=Release
 cmake --build build-offline --parallel
 ctest --test-dir build-offline --output-on-failure
 ./build-offline/screw_guard_cli --config <recipe.json> --image <image.rgb> --validate-only
 
-cd /home/harvest/project/microduck/screw-guard
+cd screw-guard
 uv run python web/validate_schema.py <recipe.json>
 node web/test_e2e_walkthrough.mjs
 sha256sum SPEC.md DELIVERY_REPORT.md native/*.cpp native/*.h web/calib.html web/validate_schema.py
@@ -106,8 +106,8 @@ sha256sum SPEC.md DELIVERY_REPORT.md native/*.cpp native/*.h web/calib.html web/
 
 ```sh
 sha256sum \
-  /home/harvest/project/microduck/screw-guard/SPEC.md \
-  /home/harvest/project/microduck/screw-guard/DELIVERY_REPORT.md \
+  SPEC.md \
+  DELIVERY_REPORT.md \
   /tmp/handoff-screw-guard.md
 ```
 

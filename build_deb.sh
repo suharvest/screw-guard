@@ -3,9 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PKG_VERSION="${1:-1.0.0}"
-RECAMERA_ROOT="${RECAMERA_ROOT:-/home/harvest/project/recamera/sscma-example-sg200x}"
-SG200X_SDK_PATH="${SG200X_SDK_PATH:-/home/harvest/recamera-dev/sg2002_recamera_emmc}"
-HOST_TOOLS_PATH="${HOST_TOOLS_PATH:-/home/harvest/project/recamera/host-tools}"
+RECAMERA_ROOT="${RECAMERA_ROOT:-$(cd "${SCRIPT_DIR}/../recamera/sscma-example-sg200x" 2>/dev/null && pwd || echo "/opt/recamera/sscma-example-sg200x")}"
+SG200X_SDK_PATH="${SG200X_SDK_PATH:-$(cd "${SCRIPT_DIR}/../../recamera-dev/sg2002_recamera_emmc" 2>/dev/null && pwd || echo "/opt/recamera/sg2002_recamera_emmc")}"
+HOST_TOOLS_PATH="${HOST_TOOLS_PATH:-$(cd "${SCRIPT_DIR}/../recamera/host-tools" 2>/dev/null && pwd || echo "/opt/recamera/host-tools")}"
 
 OUTPUT_DIR="${SCRIPT_DIR}/packages"
 OUTPUT_DEB="${OUTPUT_DIR}/screw-guard_${PKG_VERSION}_riscv64.deb"
