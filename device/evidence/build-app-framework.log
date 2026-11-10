@@ -1,0 +1,73 @@
+WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+-- CMAKE_C_COMPILER: riscv64-unknown-linux-musl-gcc
+-- CMAKE_CXX_COMPILER: riscv64-unknown-linux-musl-g++
+-- SG200X_SDK_PATH: /workspace/sg2002_recamera_emmc
+-- SYSROOT: /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot
+-- Registering component main
+-- Including /home/harvest/project/microduck/screw-guard/device/build/include
+-- Including /home/harvest/project/microduck/screw-guard/device/main
+-- Including /home/harvest/project/microduck/screw-guard/device/main/../../native
+-- component: app_framework
+-- Registering component app_framework
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/app_framework/include
+-- component: apriltag
+-- component: debug_stream
+-- Registering component debug_stream
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/debug_stream/include
+-- component: geometry
+-- component: ha_mqtt
+-- Registering component ha_mqtt
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/ha_mqtt/include
+-- component: json
+-- component: libwebsockets
+-- libwebsockets: private /home/harvest/project/recamera/sscma-example-sg200x/components/libwebsockets/prebuilt (ahead of SDK 4.0.22/4.1.7)
+-- component: onvif_meta
+-- component: onvif_service
+-- Registering component onvif_service
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/onvif_service/include
+-- component: privacy_blur
+-- component: quirc
+-- component: rgn
+-- component: rtsp_server
+-- Registering component rtsp_server
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/rtsp_server/include
+-- component: sophgo
+-- Registering component sophgo
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/sophgo/common
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/sophgo/video/
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/sophgo/video/include/
+-- component: sscma-micro
+-- INCS_EIGEN: /home/harvest/project/recamera/sscma-example-sg200x/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen;/home/harvest/project/recamera/sscma-example-sg200x/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen/Eigen
+-- Registering component sscma-micro
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen/Eigen
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/sscma-micro/sscma-micro/3rdparty/json/cJSON
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/sscma-micro/sscma-micro/sscma
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/sscma-micro/porting/sophgo
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/sscma-micro/porting/sophgo/sg200x
+-- Including /home/harvest/project/recamera/sscma-example-sg200x/components/sscma-micro/porting/sophgo/sg200x/recamera
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/harvest/project/microduck/screw-guard/device/build
+Consolidate compiler generated dependencies of target sophgo
+Consolidate compiler generated dependencies of target ha_mqtt
+[ 14%] Built target sophgo
+[ 16%] Built target ha_mqtt
+Consolidate compiler generated dependencies of target rtsp_server
+Consolidate compiler generated dependencies of target debug_stream
+Consolidate compiler generated dependencies of target sscma-micro
+[ 18%] Built target rtsp_server
+[ 22%] Built target debug_stream
+[ 80%] Built target sscma-micro
+Consolidate compiler generated dependencies of target onvif_service
+[ 83%] Built target onvif_service
+Consolidate compiler generated dependencies of target app_framework
+[ 92%] Built target app_framework
+Consolidate compiler generated dependencies of target main
+[ 93%] Building CXX object CMakeFiles/main.dir/main/main.cpp.o
+[ 94%] Linking CXX static library libmain.a
+[ 97%] Built target main
+Consolidate compiler generated dependencies of target screw-guard
+[ 98%] Building C object CMakeFiles/screw-guard.dir/dummy.c.o
+[100%] Linking CXX executable screw-guard
+[100%] Built target screw-guard

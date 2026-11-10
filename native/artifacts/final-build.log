@@ -1,0 +1,10 @@
+[ 10%] Building CXX object CMakeFiles/screw_guard_lib.dir/screw_inspector.cpp.o
+[ 20%] Linking CXX static library libscrew_guard_lib.a
+[ 40%] Built target screw_guard_lib
+[ 50%] Linking CXX executable test_screw_inspector
+[ 60%] Built target test_screw_inspector
+[ 70%] Linking CXX executable screw_guard_cli
+[ 80%] Built target screw_guard_cli
+[ 90%] Building CXX object CMakeFiles/test_config_loader.dir/test_config_loader.cpp.o
+[100%] Linking CXX executable test_config_loader
+[100%] Built target test_config_loader

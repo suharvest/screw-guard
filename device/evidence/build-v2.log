@@ -1,0 +1,304 @@
+-- CMAKE_C_COMPILER: riscv64-unknown-linux-musl-gcc
+-- CMAKE_CXX_COMPILER: riscv64-unknown-linux-musl-g++
+-- The C compiler identification is GNU 10.2.0
+-- The CXX compiler identification is GNU 10.2.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /workspace/host-tools/gcc/riscv64-linux-musl-x86_64/bin/riscv64-unknown-linux-musl-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /workspace/host-tools/gcc/riscv64-linux-musl-x86_64/bin/riscv64-unknown-linux-musl-g++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- SG200X_SDK_PATH: /workspace/sg2002_recamera_emmc
+-- SYSROOT: /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot
+-- Registering component main
+-- Including /workspace/_scratch/screw-guard-native-5/device/main
+-- Including /workspace/_scratch/screw-guard-native-5/device/main/../../native
+-- component: debug_stream
+-- Registering component debug_stream
+-- Including /workspace/_scratch/screw-guard-sdk/components/debug_stream/include
+-- component: geometry
+-- component: ha_mqtt
+-- Registering component ha_mqtt
+-- Including /workspace/_scratch/screw-guard-sdk/components/ha_mqtt/include
+-- component: json
+-- component: libwebsockets
+-- libwebsockets: private /workspace/_scratch/screw-guard-sdk/components/libwebsockets/prebuilt (ahead of SDK 4.0.22/4.1.7)
+-- component: onvif_meta
+-- component: onvif_service
+-- component: privacy_blur
+-- component: quirc
+-- component: rgn
+-- component: rtsp_server
+-- Registering component rtsp_server
+-- Including /workspace/_scratch/screw-guard-sdk/components/rtsp_server/include
+-- component: sophgo
+-- Registering component sophgo
+-- Including /workspace/_scratch/screw-guard-sdk/components/sophgo/common
+-- Including /workspace/_scratch/screw-guard-sdk/components/sophgo/video/
+-- Including /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/
+-- component: sscma-micro
+-- INCS_EIGEN: /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen;/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen/Eigen
+-- Registering component sscma-micro
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen/Eigen
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/json/cJSON
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/recamera
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /workspace/_scratch/screw-guard-build-v2
+[  1%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/common/app_ipcam_comm.c.o
+[  2%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/common/app_ipcam_ll.c.o
+[  3%] Building CXX object CMakeFiles/ha_mqtt.dir/workspace/_scratch/screw-guard-sdk/components/ha_mqtt/src/ha_mqtt.cpp.o
+[  5%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/camera_conf.c.o
+[  6%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/fv_monitor.c.o
+[  7%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/isp.c.o
+[  8%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/sensors.c.o
+[ 10%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/venc.c.o
+[ 11%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/vi.c.o
+[ 12%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/video_paramparse.c.o
+/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/vi.c: In function 'app_ipcam_Vi_Chn_Start':
+/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/vi.c:370:52: warning: passing argument 3 of 'CVI_VI_GetChnFlipMirror' from incompatible pointer type [-Wincompatible-pointer-types]
+  370 |             CVI_VI_GetChnFlipMirror(ViPipe, ViChn, &flip, &mirror);
+      |                                                    ^~~~~
+      |                                                    |
+      |                                                    _Bool *
+In file included from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/app_ipcam_vi.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/app_ipcam_paramparse.h:9,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/vi.c:6:
+/workspace/sg2002_recamera_emmc/cvi_mpi/include/cvi_vi.h:557:73: note: expected 'CVI_BOOL *' {aka 'unsigned char *'} but argument is of type '_Bool *'
+  557 | CVI_S32 CVI_VI_GetChnFlipMirror(VI_PIPE ViPipe, VI_CHN ViChn, CVI_BOOL *pbFlip, CVI_BOOL *pbMirror);
+      |                                                               ~~~~~~~~~~^~~~~~
+/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/vi.c:370:59: warning: passing argument 4 of 'CVI_VI_GetChnFlipMirror' from incompatible pointer type [-Wincompatible-pointer-types]
+  370 |             CVI_VI_GetChnFlipMirror(ViPipe, ViChn, &flip, &mirror);
+      |                                                           ^~~~~~~
+      |                                                           |
+      |                                                           _Bool *
+In file included from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/app_ipcam_vi.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/app_ipcam_paramparse.h:9,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/vi.c:6:
+/workspace/sg2002_recamera_emmc/cvi_mpi/include/cvi_vi.h:557:91: note: expected 'CVI_BOOL *' {aka 'unsigned char *'} but argument is of type '_Bool *'
+  557 | CVI_S32 CVI_VI_GetChnFlipMirror(VI_PIPE ViPipe, VI_CHN ViChn, CVI_BOOL *pbFlip, CVI_BOOL *pbMirror);
+      |                                                                                 ~~~~~~~~~~^~~~~~~~
+[ 13%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/video_sys.c.o
+[ 15%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/video/src/vpss.c.o
+[ 16%] Building C object CMakeFiles/sophgo.dir/workspace/_scratch/screw-guard-sdk/components/sophgo/video/video.c.o
+[ 17%] Linking C static library libsophgo.a
+[ 17%] Built target sophgo
+[ 18%] Building CXX object CMakeFiles/debug_stream.dir/workspace/_scratch/screw-guard-sdk/components/debug_stream/src/debug_stream.cpp.o
+[ 20%] Building CXX object CMakeFiles/rtsp_server.dir/workspace/_scratch/screw-guard-sdk/components/rtsp_server/src/rtsp_server.cpp.o
+[ 21%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/cv/ma_cv.cpp.o
+[ 22%] Linking CXX static library libha_mqtt.a
+[ 22%] Built target ha_mqtt
+[ 24%] Building CXX object CMakeFiles/debug_stream.dir/workspace/_scratch/screw-guard-sdk/components/debug_stream/src/ws_transport_lws.cpp.o
+[ 25%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/engine/ma_engine_cvi.cpp.o
+[ 26%] Linking CXX static library librtsp_server.a
+[ 26%] Built target rtsp_server
+[ 27%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/engine/ma_engine_hailo.cpp.o
+[ 29%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/engine/ma_engine_tflite.cpp.o
+[ 30%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/math/ma_math_matrix.cpp.o
+[ 31%] Linking CXX static library libdebug_stream.a
+[ 32%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/math/ma_math_vectors.cpp.o
+[ 34%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_base.cpp.o
+[ 34%] Built target debug_stream
+[ 35%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_bisenetv2.cpp.o
+[ 36%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_classifier.cpp.o
+[ 37%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_detector.cpp.o
+[ 39%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_factory.cpp.o
+[ 40%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_fomo.cpp.o
+[ 41%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_nvidia_det.cpp.o
+[ 43%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_pfld.cpp.o
+[ 44%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_point_detector.cpp.o
+[ 45%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_pose_detector.cpp.o
+[ 46%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_rtmdet.cpp.o
+[ 48%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_segmentor.cpp.o
+[ 49%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolo11.cpp.o
+[ 50%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolo11_pose.cpp.o
+[ 51%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolo11_seg.cpp.o
+[ 53%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolo26.cpp.o
+[ 54%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolo26_pose.cpp.o
+[ 55%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolo26_seg.cpp.o
+[ 56%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolo_world.cpp.o
+[ 58%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolov5.cpp.o
+[ 59%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolov8.cpp.o
+[ 60%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolov8_pose.cpp.o
+[ 62%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolov8_pose_hailo.cpp.o
+[ 63%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/model/ma_model_yolov8_seg_hailo.cpp.o
+[ 64%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/utils/ma_anchors.cpp.o
+[ 65%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/utils/ma_base64.cpp.o
+[ 67%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/utils/ma_nms.cpp.o
+[ 68%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/server/at/codec/ma_codec_json.cpp.o
+[ 69%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/server/at/ma_server_at.cpp.o
+In file included from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hssl.h:6,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpServer.h:5,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/WebSocketServer.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.h:11,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_porting_platform.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/porting/ma_porting.h:18,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/server/at/ma_server_at.h:10,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/server/at/ma_server_at.cpp:1:
+/workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hplatform.h:64:6: warning: #warning "Untested hardware architecture!" [-Wcpp]
+   64 |     #warning "Untested hardware architecture!"
+      |      ^~~~~~~
+[ 70%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/client/ma_client_at.cpp.o
+[ 72%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/porting/osal/ma_osal_pthread.cpp.o
+[ 73%] Building C object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_misc.c.o
+[ 74%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_storage_file.cpp.o
+[ 75%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_mqtt.cpp.o
+[ 77%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_rtsp.cpp.o
+[ 78%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.cpp.o
+[ 79%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_camera_sg200x.cpp.o
+In file included from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hssl.h:6,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpServer.h:5,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/WebSocketServer.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.h:11,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.cpp:1:
+/workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hplatform.h:64:6: warning: #warning "Untested hardware architecture!" [-Wcpp]
+   64 |     #warning "Untested hardware architecture!"
+      |      ^~~~~~~
+[ 81%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_device_sg200x.cpp.o
+In file included from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hssl.h:6,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpServer.h:5,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/WebSocketServer.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.h:11,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_porting_platform.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/porting/ma_porting.h:18,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_camera_sg200x.h:7,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_camera_sg200x.cpp:1:
+/workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hplatform.h:64:6: warning: #warning "Untested hardware architecture!" [-Wcpp]
+   64 |     #warning "Untested hardware architecture!"
+      |      ^~~~~~~
+In file included from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/app_ipcam_paramparse.h:6,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/video.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_camera_sg200x.h:9,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_camera_sg200x.cpp:1:
+/workspace/_scratch/screw-guard-sdk/components/sophgo/common/app_ipcam_comm.h:155: warning: "STRINGIFY" redefined
+  155 | #define STRINGIFY(x, fmt)           #x fmt
+      | 
+In file included from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hbase.h:6,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpMessage.h:41,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpService.h:13,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpServer.h:7,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/WebSocketServer.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.h:11,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_porting_platform.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/porting/ma_porting.h:18,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_camera_sg200x.h:7,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_camera_sg200x.cpp:1:
+/workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hdef.h:238: note: this is the location of the previous definition
+  238 | #define STRINGIFY(x)    STRINGIFY_HELPER(x)
+      | 
+In file included from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hssl.h:6,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpServer.h:5,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/WebSocketServer.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.h:11,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_porting_platform.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/porting/ma_porting.h:18,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_device_sg200x.cpp:7:
+/workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hplatform.h:64:6: warning: #warning "Untested hardware architecture!" [-Wcpp]
+   64 |     #warning "Untested hardware architecture!"
+      |      ^~~~~~~
+In file included from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/app_ipcam_paramparse.h:6,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/video.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_camera_sg200x.h:9,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_device_sg200x.cpp:9:
+/workspace/_scratch/screw-guard-sdk/components/sophgo/common/app_ipcam_comm.h:155: warning: "STRINGIFY" redefined
+  155 | #define STRINGIFY(x, fmt)           #x fmt
+      | 
+In file included from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hbase.h:6,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpMessage.h:41,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpService.h:13,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpServer.h:7,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/WebSocketServer.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.h:11,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_porting_platform.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/porting/ma_porting.h:18,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/ma_device_sg200x.cpp:7:
+/workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hdef.h:238: note: this is the location of the previous definition
+  238 | #define STRINGIFY(x)    STRINGIFY_HELPER(x)
+      | 
+[ 82%] Building C object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/json/cJSON/cJSON.c.o
+[ 83%] Building C object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/json/cJSON/cJSON_Utils.c.o
+[ 84%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/extension/bytetrack/byte_tracker.cpp.o
+[ 86%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/extension/bytetrack/kalman_filter.cpp.o
+[ 87%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/extension/bytetrack/lapjv.cpp.o
+[ 88%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/extension/bytetrack/strack.cpp.o
+[ 89%] Building CXX object CMakeFiles/sscma-micro.dir/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/extension/counter/counter.cpp.o
+[ 91%] Linking CXX static library libsscma-micro.a
+[ 91%] Built target sscma-micro
+[ 92%] Building CXX object CMakeFiles/main.dir/main/main.cpp.o
+[ 93%] Building CXX object CMakeFiles/main.dir/workspace/_scratch/screw-guard-native-5/native/app_config.cpp.o
+[ 94%] Building CXX object CMakeFiles/main.dir/workspace/_scratch/screw-guard-native-5/native/screw_inspector.cpp.o
+[ 96%] Building CXX object CMakeFiles/main.dir/workspace/_scratch/screw-guard-native-5/native/result_payload.cpp.o
+/workspace/_scratch/screw-guard-native-5/native/app_config.cpp:2:10: fatal error: nlohmann/json.hpp: No such file or directory
+    2 | #include <nlohmann/json.hpp>
+      |          ^~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [CMakeFiles/main.dir/build.make:90: CMakeFiles/main.dir/workspace/_scratch/screw-guard-native-5/native/app_config.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+/workspace/_scratch/screw-guard-native-5/native/result_payload.cpp:2:10: fatal error: nlohmann/json.hpp: No such file or directory
+    2 | #include <nlohmann/json.hpp>
+      |          ^~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [CMakeFiles/main.dir/build.make:104: CMakeFiles/main.dir/workspace/_scratch/screw-guard-native-5/native/result_payload.cpp.o] Error 1
+In file included from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hssl.h:6,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpServer.h:5,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/WebSocketServer.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.h:11,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_porting_platform.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/porting/ma_porting.h:18,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/sscma.h:8,
+                 from /workspace/_scratch/screw-guard-native-5/device/main/main.cpp:7:
+/workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hplatform.h:64:6: warning: #warning "Untested hardware architecture!" [-Wcpp]
+   64 |     #warning "Untested hardware architecture!"
+      |      ^~~~~~~
+/workspace/_scratch/screw-guard-native-5/native/screw_inspector.cpp:2:10: fatal error: nlohmann/json.hpp: No such file or directory
+    2 | #include <nlohmann/json.hpp>
+      |          ^~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [CMakeFiles/main.dir/build.make:118: CMakeFiles/main.dir/workspace/_scratch/screw-guard-native-5/native/screw_inspector.cpp.o] Error 1
+In file included from /workspace/sg2002_recamera_emmc/osdrv/interdrv/include/common/uapi/linux/cvi_common.h:11,
+                 from /workspace/sg2002_recamera_emmc/osdrv/interdrv/include/common/uapi/linux/cvi_comm_video.h:13,
+                 from /workspace/sg2002_recamera_emmc/osdrv/interdrv/include/common/uapi/linux/cvi_comm_sys.h:12,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/app_ipcam_paramparse.h:4,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/video.h:8,
+                 from /workspace/_scratch/screw-guard-native-5/device/main/main.cpp:8:
+/workspace/sg2002_recamera_emmc/osdrv/interdrv/include/common/uapi/linux/cvi_type.h:59: warning: "CVI_FAILURE" redefined
+   59 | #define CVI_FAILURE             (-1)
+      | 
+In file included from /workspace/sg2002_recamera_emmc/install/soc_sg2002_recamera_emmc/tpu_musl_riscv64/cvitek_tpu_sdk/include/cviruntime.h:16,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/engine/ma_engine_cvi.h:12,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/engine/ma_engine.h:12,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/ma_core.h:7,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/sscma.h:7,
+                 from /workspace/_scratch/screw-guard-native-5/device/main/main.cpp:7:
+/workspace/sg2002_recamera_emmc/install/soc_sg2002_recamera_emmc/tpu_musl_riscv64/cvitek_tpu_sdk/include/cvitpu_debug.h:12: note: this is the location of the previous definition
+   12 | #define CVI_FAILURE           -1
+      | 
+In file included from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/app_ipcam_paramparse.h:6,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/video.h:8,
+                 from /workspace/_scratch/screw-guard-native-5/device/main/main.cpp:8:
+/workspace/_scratch/screw-guard-sdk/components/sophgo/common/app_ipcam_comm.h:155: warning: "STRINGIFY" redefined
+  155 | #define STRINGIFY(x, fmt)           #x fmt
+      | 
+In file included from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hbase.h:6,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpMessage.h:41,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpService.h:13,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpServer.h:7,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/WebSocketServer.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.h:11,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_porting_platform.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/porting/ma_porting.h:18,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/sscma.h:8,
+                 from /workspace/_scratch/screw-guard-native-5/device/main/main.cpp:7:
+/workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hdef.h:238: note: this is the location of the previous definition
+  238 | #define STRINGIFY(x)    STRINGIFY_HELPER(x)
+      | 
+gmake[1]: *** [CMakeFiles/Makefile2:99: CMakeFiles/main.dir/all] Error 2
+gmake: *** [Makefile:156: all] Error 2

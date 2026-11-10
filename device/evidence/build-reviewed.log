@@ -1,0 +1,60 @@
+[ 16%] Built target sophgo
+[ 18%] Built target ha_mqtt
+[ 22%] Built target debug_stream
+[ 25%] Built target rtsp_server
+[ 91%] Built target sscma-micro
+[ 92%] Building CXX object CMakeFiles/main.dir/main/main.cpp.o
+[ 93%] Building CXX object CMakeFiles/main.dir/workspace/_scratch/screw-guard-native-5/native/screw_inspector.cpp.o
+In file included from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hssl.h:6,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpServer.h:5,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/WebSocketServer.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.h:11,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_porting_platform.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/porting/ma_porting.h:18,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/sscma.h:8,
+                 from /workspace/_scratch/screw-guard-native-5/device/main/main.cpp:7:
+/workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hplatform.h:64:6: warning: #warning "Untested hardware architecture!" [-Wcpp]
+   64 |     #warning "Untested hardware architecture!"
+      |      ^~~~~~~
+In file included from /workspace/sg2002_recamera_emmc/osdrv/interdrv/include/common/uapi/linux/cvi_common.h:11,
+                 from /workspace/sg2002_recamera_emmc/osdrv/interdrv/include/common/uapi/linux/cvi_comm_video.h:13,
+                 from /workspace/sg2002_recamera_emmc/osdrv/interdrv/include/common/uapi/linux/cvi_comm_sys.h:12,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/app_ipcam_paramparse.h:4,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/video.h:8,
+                 from /workspace/_scratch/screw-guard-native-5/device/main/main.cpp:8:
+/workspace/sg2002_recamera_emmc/osdrv/interdrv/include/common/uapi/linux/cvi_type.h:59: warning: "CVI_FAILURE" redefined
+   59 | #define CVI_FAILURE             (-1)
+      | 
+In file included from /workspace/sg2002_recamera_emmc/install/soc_sg2002_recamera_emmc/tpu_musl_riscv64/cvitek_tpu_sdk/include/cviruntime.h:16,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/engine/ma_engine_cvi.h:12,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/engine/ma_engine.h:12,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/core/ma_core.h:7,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/sscma.h:7,
+                 from /workspace/_scratch/screw-guard-native-5/device/main/main.cpp:7:
+/workspace/sg2002_recamera_emmc/install/soc_sg2002_recamera_emmc/tpu_musl_riscv64/cvitek_tpu_sdk/include/cvitpu_debug.h:12: note: this is the location of the previous definition
+   12 | #define CVI_FAILURE           -1
+      | 
+In file included from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/app_ipcam_paramparse.h:6,
+                 from /workspace/_scratch/screw-guard-sdk/components/sophgo/video/video.h:8,
+                 from /workspace/_scratch/screw-guard-native-5/device/main/main.cpp:8:
+/workspace/_scratch/screw-guard-sdk/components/sophgo/common/app_ipcam_comm.h:155: warning: "STRINGIFY" redefined
+  155 | #define STRINGIFY(x, fmt)           #x fmt
+      | 
+In file included from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hbase.h:6,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpMessage.h:41,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpService.h:13,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/HttpServer.h:7,
+                 from /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/WebSocketServer.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_transport_websocket.h:11,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/ma_porting_platform.h:8,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/porting/ma_porting.h:18,
+                 from /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma/sscma.h:8,
+                 from /workspace/_scratch/screw-guard-native-5/device/main/main.cpp:7:
+/workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot/usr/include/hv/hdef.h:238: note: this is the location of the previous definition
+  238 | #define STRINGIFY(x)    STRINGIFY_HELPER(x)
+      | 
+[ 94%] Linking CXX static library libmain.a
+[ 97%] Built target main
+Consolidate compiler generated dependencies of target screw-guard
+[ 98%] Linking CXX executable screw-guard
+[100%] Built target screw-guard

@@ -1,0 +1,52 @@
+{
+  "app_version": "1.0.0",
+  "applied_revision": 2,
+  "blocks": [
+    {
+      "actual_screws": 0,
+      "angle_deg": 0.0,
+      "bbox_xywh": [
+        0.0,
+        0.0,
+        750.0,
+        881.0
+      ],
+      "block_id": 1,
+      "expected_screws": 4,
+      "orientation": "ORIENTATION_AMBIGUOUS",
+      "reason": "CANNOT_INSPECT_ORIENTATION",
+      "screws": [],
+      "status": "CANNOT_INSPECT"
+    },
+    {
+      "actual_screws": 0,
+      "angle_deg": 0.0,
+      "bbox_xywh": [
+        495.0,
+        0.0,
+        255.0,
+        281.0
+      ],
+      "block_id": 2,
+      "expected_screws": 4,
+      "orientation": "ORIENTATION_AMBIGUOUS",
+      "reason": "CANNOT_INSPECT_ORIENTATION",
+      "screws": [],
+      "status": "CANNOT_INSPECT"
+    }
+  ],
+  "cycle_id": "offline-1",
+  "device_id": "recamera-sg2002-station01",
+  "frame_id": 1,
+  "overall_reason": "CANNOT_INSPECT_ORIENTATION",
+  "overall_status": "CANNOT_INSPECT",
+  "schema_version": "2.4",
+  "summary": {
+    "actual_blocks": 2,
+    "cannot_inspect_blocks": 2,
+    "defect_blocks": 0,
+    "expected_blocks": 2,
+    "passed_blocks": 0
+  },
+  "timestamp": 0.0
+}

@@ -1,0 +1,42 @@
+# Local Python environment and interpreter caches
+.venv/
+__pycache__/
+*.py[cod]
+
+# Native and device build trees
+native/build*/
+device/build*/
+
+# Native test snapshots and generated evidence that contain build trees,
+# object files, binaries, or machine-local absolute paths
+native/artifacts/native-before-tests/
+native/artifacts/cli/
+
+# Superseded browser runs and scratch screenshots; the final run and review
+# evidence are kept explicitly below.
+web/artifacts/run-2026-11-06T04-36-22-657Z/
+web/artifacts/run-2026-11-06T04-36-48-713Z/
+web/artifacts/run-2026-11-06T04-37-15-082Z/
+web/artifacts/run-2026-11-06T04-38-48-988Z/
+web/artifacts/25_final.png
+web/artifacts/26_final.png
+web/artifacts/27_final.png
+
+# Retained historical logs are committed explicitly; other local scratch
+# outputs from earlier validation runs stay out of the repository.
+build.log
+test.log
+native/artifacts/cmake-build.log
+native/artifacts/cmake-configure.log
+native/artifacts/ctest.log
+native/artifacts/sha256.txt
+web/artifacts/console.log
+web/artifacts/invalid-mismatch.json
+web/artifacts/invalid-size.json
+web/artifacts/sha256.txt
+web/artifacts/sha256_external.txt
+web/artifacts/thirty-two-hole.json
+web/artifacts/two-hole.json
+web/annotated_grid.jpg
+web/crop_*.png
+web/patch_*.png

@@ -1,0 +1,69 @@
+[E2E] === Starting Rigorous Acceptance Walkthrough (Round 11 - Confirmed Specimen Alignment) ===
+[E2E] Navigating to http://127.0.0.1:8092/calib.html ...
+[E2E] Step 1: Uploading real workpiece sample image (750x882)...
+[E2E] Step 2: page.mouse drag on cv1 (105,31) -> (405,231) for exact 3:2 lock...
+[E2E] Saved screenshot 1 (Real workpiece box): /home/harvest/.gemini/antigravity-cli/brain/27e09996-4a94-47d6-bb01-3be22bbc1531/e2e_step1_loaded.png
+[E2E] Step 3: page.mouse drag on cv2 to define direction anchor...
+[E2E] Step 4: page.mouse clicks on cv2 placing screw 1 (u:236, v:70) and screw 2 (u:65, v:130)...
+[E2E] Real physical center mapping check (Hole 1 target: 341,101; Hole 2 target: 170,161): {
+  hole1_src: [ 341, 101 ],
+  hole2_src: [ 170, 161 ],
+  err1: 0.000008259420067880247,
+  err2: 0.000008173135962638639
+}
+[E2E] Saved screenshot 2 (Real anchor and 2 rois): /home/harvest/.gemini/antigravity-cli/brain/27e09996-4a94-47d6-bb01-3be22bbc1531/e2e_step2_rois_labeled.png
+[E2E] Step 5: Clicking #btnTrial for real image inspection...
+[E2E] Structured Trial Detail: {
+  "status": "DEFECT",
+  "reason": "MISSING_SCREW",
+  "rows": [
+    {
+      "name": "1 螺孔1",
+      "edge": 46.5,
+      "bright": "46.9%",
+      "score": 1,
+      "status": "PRESENT"
+    },
+    {
+      "name": "2 螺孔2",
+      "edge": 1.5,
+      "bright": "0.0%",
+      "score": 0.03,
+      "status": "MISSING"
+    }
+  ]
+}
+[E2E] Saved screenshot 3 (Real trial inspection result panel): /home/harvest/.gemini/antigravity-cli/brain/27e09996-4a94-47d6-bb01-3be22bbc1531/e2e_step3_trial_result.png
+[E2E] Hole 1 evaluation: status="PRESENT", score=1
+[E2E] Hole 2 evaluation: status="MISSING", score=0.03
+[E2E] Per-hole exact assertions: 100% PASSED (Hole 1: PRESENT >= 0.50, Hole 2: MISSING < 0.35, Overall: DEFECT / MISSING_SCREW)
+[E2E] Step 6: Real click on #btnExport and capturing browser download event...
+[E2E] Captured real downloaded file: "screw-guard-leg_joint-r1.json" at "/tmp/playwright-artifacts-czQ0v7/ae0f1af4-c686-46f9-8569-ed800825bc05"
+[E2E] Persisted real exported recipe to: /home/harvest/.gemini/antigravity-cli/brain/27e09996-4a94-47d6-bb01-3be22bbc1531/screw-guard-leg_joint-r1.json
+[E2E] Step 7: Executing official Draft-07 JSON Schema validation (Strict 4 blocks / 2 screws)...
+[E2E] Schema Validation Result:
+JSON Schema Draft-07 Validation PASSED for /home/harvest/.gemini/antigravity-cli/brain/27e09996-4a94-47d6-bb01-3be22bbc1531/screw-guard-leg_joint-r1.json
+[E2E] Step 8: Verifying Video WS Snapshot 4s timeout & close...
+[E2E] Video WS timeout completed in 4041ms. Toast: "抓拍失败：4 秒内未收到视频帧。可改用「上传图片」"
+[E2E] Step 9: Verifying HTTP API 4s timeout & AbortError...
+[E2E] HTTP API timeout completed in 4053ms. Toast: "读取失败：请求超时（4000ms）"
+---------------------------------------------------------------
+[E2E] Traceability Manifest (SHA-256 Hashes for this execution):
+SHA256 (test_sample.jpg): bd01cc800be16dd68e9917443d260f5826ab8577b4b75802caa720ede13e0e2e
+SHA256 (annotated_specimen.png): 1d76038c46de5ed5b1da1252de69c99a53e8420fe6551fddf8533818cf09023d
+SHA256 (patch_present.png): 690c7cbade33a8159eca297dae8e34084dc06ecd897018b4d50a6d18fa8e7078
+SHA256 (patch_missing.png): 989031e035d21d2ff76908a4943eb64ca64d95aa51fa4bd22a40e9901d1f34ed
+SHA256 (e2e_step1_loaded.png): 271d17ce69bc5607ea00395cf0dfbc00637b2be939d7df995ff19c185c88bbad
+SHA256 (e2e_step2_rois_labeled.png): e71ac92f39cb48e5c9f283faf6bb91ebed089a5061b950308943aa1bc2dc2e49
+SHA256 (e2e_step3_trial_result.png): 1bb194a8e7048b90ca2477c3b94a379b25a160e0ad2b723f778976a31667d387
+SHA256 (exported_recipe_json): a90846d65ce4510b8a74d1fc54a5011b073b5f8c322414aa1cb8969696d300ef
+SHA256 (app_config.cpp): 59ed572dfa7bc596f524516c93d0b93e0998c55daba6202541c351480bd78b02
+SHA256 (screw_inspector.cpp): 67174bacad37d85313ceae78b494c23e149ddbb5595c6f468ad84ae099413fb9
+SHA256 (calib.html): 9743bcf534b396c2c698ac98d95129308564c23c86aefcd02f84f19f8e3cbb70
+SHA256 (test_screw_inspector): f0fb0de34b840f565ec6488f8f855cb72ba582532c498226b2d2f7443b4d27e5
+SHA256 (libscrew_guard_lib.a): 48acf61d7b1f539dca400a95546127fe892ebca8d4653973dd5a3e4b894b6f19
+---------------------------------------------------------------
+===============================================================
+ [E2E] 100% PURE NATIVE PAGE.MOUSE ACCEPTANCE PASSED !        
+===============================================================
+E2E_EXIT_CODE: 0

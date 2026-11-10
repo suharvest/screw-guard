@@ -1,0 +1,93 @@
+{
+  "app_version": "1.0.0",
+  "applied_revision": 2,
+  "blocks": [
+    {
+      "actual_screws": 0,
+      "angle_deg": 90.0,
+      "bbox_xywh": [
+        0.0,
+        0.0,
+        750.0,
+        881.0
+      ],
+      "block_id": 1,
+      "expected_screws": 4,
+      "orientation": "ORIENTATION_AMBIGUOUS",
+      "reason": "CANNOT_INSPECT_ORIENTATION",
+      "screws": [],
+      "status": "CANNOT_INSPECT"
+    },
+    {
+      "actual_screws": 0,
+      "angle_deg": -90.0,
+      "bbox_xywh": [
+        495.0,
+        0.0,
+        255.0,
+        281.0
+      ],
+      "block_id": 2,
+      "expected_screws": 4,
+      "orientation": "180_DEG_CONFIRMED",
+      "reason": "CANNOT_INSPECT_LOW_CONFIDENCE",
+      "screws": [
+        {
+          "id": 1,
+          "name": "螺孔1",
+          "roi_center_xy": [
+            542.9,
+            228.1
+          ],
+          "score": 0.55,
+          "status": "UNCERTAIN"
+        },
+        {
+          "id": 2,
+          "name": "螺孔2",
+          "roi_center_xy": [
+            542.9,
+            203.0
+          ],
+          "score": 0.55,
+          "status": "UNCERTAIN"
+        },
+        {
+          "id": 3,
+          "name": "螺孔3",
+          "roi_center_xy": [
+            542.9,
+            176.9
+          ],
+          "score": 0.52,
+          "status": "UNCERTAIN"
+        },
+        {
+          "id": 4,
+          "name": "螺孔4",
+          "roi_center_xy": [
+            542.9,
+            151.8
+          ],
+          "score": 0.54,
+          "status": "UNCERTAIN"
+        }
+      ],
+      "status": "CANNOT_INSPECT"
+    }
+  ],
+  "cycle_id": "offline-1",
+  "device_id": "recamera-sg2002-station01",
+  "frame_id": 1,
+  "overall_reason": "CANNOT_INSPECT_ORIENTATION",
+  "overall_status": "CANNOT_INSPECT",
+  "schema_version": "2.4",
+  "summary": {
+    "actual_blocks": 2,
+    "cannot_inspect_blocks": 2,
+    "defect_blocks": 0,
+    "expected_blocks": 2,
+    "passed_blocks": 0
+  },
+  "timestamp": 0.0
+}

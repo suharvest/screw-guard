@@ -1,0 +1,150 @@
+[
+  {
+    "name": "two-hole",
+    "mode": "validate",
+    "exit": 0,
+    "valid": true,
+    "status": null,
+    "summary": null,
+    "blocks": []
+  },
+  {
+    "name": "two-hole",
+    "mode": "inspect",
+    "exit": 0,
+    "valid": null,
+    "status": "CANNOT_INSPECT",
+    "summary": {
+      "actual_blocks": 2,
+      "cannot_inspect_blocks": 2,
+      "defect_blocks": 0,
+      "expected_blocks": 2,
+      "passed_blocks": 0
+    },
+    "blocks": [
+      {
+        "status": "CANNOT_INSPECT",
+        "reason": "CANNOT_INSPECT_ORIENTATION",
+        "orientation": "ORIENTATION_AMBIGUOUS",
+        "actual_screws": 0
+      },
+      {
+        "status": "CANNOT_INSPECT",
+        "reason": "CANNOT_INSPECT_ORIENTATION",
+        "orientation": "ORIENTATION_AMBIGUOUS",
+        "actual_screws": 0
+      }
+    ]
+  },
+  {
+    "name": "four-horizontal",
+    "mode": "validate",
+    "exit": 0,
+    "valid": true,
+    "status": null,
+    "summary": null,
+    "blocks": []
+  },
+  {
+    "name": "four-horizontal",
+    "mode": "inspect",
+    "exit": 0,
+    "valid": null,
+    "status": "CANNOT_INSPECT",
+    "summary": {
+      "actual_blocks": 2,
+      "cannot_inspect_blocks": 2,
+      "defect_blocks": 0,
+      "expected_blocks": 2,
+      "passed_blocks": 0
+    },
+    "blocks": [
+      {
+        "status": "CANNOT_INSPECT",
+        "reason": "CANNOT_INSPECT_ORIENTATION",
+        "orientation": "ORIENTATION_AMBIGUOUS",
+        "actual_screws": 0
+      },
+      {
+        "status": "CANNOT_INSPECT",
+        "reason": "CANNOT_INSPECT_LOW_CONFIDENCE",
+        "orientation": "180_DEG_CONFIRMED",
+        "actual_screws": 0
+      }
+    ]
+  },
+  {
+    "name": "four-vertical",
+    "mode": "validate",
+    "exit": 0,
+    "valid": true,
+    "status": null,
+    "summary": null,
+    "blocks": []
+  },
+  {
+    "name": "four-vertical",
+    "mode": "inspect",
+    "exit": 0,
+    "valid": null,
+    "status": "CANNOT_INSPECT",
+    "summary": {
+      "actual_blocks": 2,
+      "cannot_inspect_blocks": 2,
+      "defect_blocks": 0,
+      "expected_blocks": 2,
+      "passed_blocks": 0
+    },
+    "blocks": [
+      {
+        "status": "CANNOT_INSPECT",
+        "reason": "CANNOT_INSPECT_ORIENTATION",
+        "orientation": "ORIENTATION_AMBIGUOUS",
+        "actual_screws": 0
+      },
+      {
+        "status": "CANNOT_INSPECT",
+        "reason": "CANNOT_INSPECT_ORIENTATION",
+        "orientation": "ORIENTATION_AMBIGUOUS",
+        "actual_screws": 0
+      }
+    ]
+  },
+  {
+    "name": "thirty-two-hole",
+    "mode": "validate",
+    "exit": 0,
+    "valid": true,
+    "status": null,
+    "summary": null,
+    "blocks": []
+  },
+  {
+    "name": "thirty-two-hole",
+    "mode": "inspect",
+    "exit": 0,
+    "valid": null,
+    "status": "CANNOT_INSPECT",
+    "summary": {
+      "actual_blocks": 2,
+      "cannot_inspect_blocks": 2,
+      "defect_blocks": 0,
+      "expected_blocks": 2,
+      "passed_blocks": 0
+    },
+    "blocks": [
+      {
+        "status": "CANNOT_INSPECT",
+        "reason": "CANNOT_INSPECT_ORIENTATION",
+        "orientation": "ORIENTATION_AMBIGUOUS",
+        "actual_screws": 0
+      },
+      {
+        "status": "CANNOT_INSPECT",
+        "reason": "CANNOT_INSPECT_ORIENTATION",
+        "orientation": "ORIENTATION_AMBIGUOUS",
+        "actual_screws": 0
+      }
+    ]
+  }
+]

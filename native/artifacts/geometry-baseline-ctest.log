@@ -1,0 +1,530 @@
+Internal ctest changing into directory: /home/harvest/project/microduck/screw-guard/native/build-offline
+Test project /home/harvest/project/microduck/screw-guard/native/build-offline
+    Start 1: test_screw_inspector
+1/2 Test #1: test_screw_inspector .............***Failed    0.48 sec
+========================================
+ Running ScrewGuard Native Unit Tests   
+========================================
+[RUN] test_app_config_validation...
+[PASS] test_app_config_validation passed.
+[RUN] test_normal_pass...
+[DEBUG test_normal_pass payload]:
+{
+  "app_version": "1.0.0",
+  "applied_revision": 1,
+  "blocks": [
+    {
+      "actual_screws": 2,
+      "angle_deg": 0.0,
+      "bbox_xywh": [
+        249.0,
+        399.0,
+        298.0,
+        199.0
+      ],
+      "block_id": 1,
+      "expected_screws": 2,
+      "orientation": "0_DEG_CONFIRMED",
+      "reason": "OK",
+      "screws": [
+        {
+          "id": 1,
+          "name": "侧面M2",
+          "roi_center_xy": [
+            333.1,
+            536.6
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        },
+        {
+          "id": 2,
+          "name": "关节M2",
+          "roi_center_xy": [
+            426.2,
+            488.1
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "actual_screws": 2,
+      "angle_deg": -170.0,
+      "bbox_xywh": [
+        933.0,
+        373.0,
+        332.0,
+        251.0
+      ],
+      "block_id": 2,
+      "expected_screws": 2,
+      "orientation": "180_DEG_CONFIRMED",
+      "reason": "OK",
+      "screws": [
+        {
+          "id": 1,
+          "name": "侧面M2",
+          "roi_center_xy": [
+            1168.6,
+            470.2
+          ],
+          "score": 0.93,
+          "status": "PRESENT"
+        },
+        {
+          "id": 2,
+          "name": "关节M2",
+          "roi_center_xy": [
+            1067.5,
+            502.1
+          ],
+          "score": 0.92,
+          "status": "PRESENT"
+        }
+      ],
+      "status": "PASS"
+    }
+  ],
+  "cycle_id": "cyc_001",
+  "device_id": "recamera-sg2002-station01",
+  "frame_id": 101,
+  "overall_reason": "OK",
+  "overall_status": "PASS",
+  "schema_version": "2.4",
+  "summary": {
+    "actual_blocks": 2,
+    "cannot_inspect_blocks": 0,
+    "defect_blocks": 0,
+    "expected_blocks": 2,
+    "passed_blocks": 2
+  },
+  "timestamp": 1000.0
+}
+[PASS] test_normal_pass passed.
+[RUN] test_missing_screw...
+[DEBUG test_missing_screw payload]:
+{
+  "app_version": "1.0.0",
+  "applied_revision": 1,
+  "blocks": [
+    {
+      "actual_screws": 2,
+      "angle_deg": 0.0,
+      "bbox_xywh": [
+        249.0,
+        399.0,
+        298.0,
+        199.0
+      ],
+      "block_id": 1,
+      "expected_screws": 2,
+      "orientation": "0_DEG_CONFIRMED",
+      "reason": "OK",
+      "screws": [
+        {
+          "id": 1,
+          "name": "侧面M2",
+          "roi_center_xy": [
+            333.1,
+            536.6
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        },
+        {
+          "id": 2,
+          "name": "关节M2",
+          "roi_center_xy": [
+            426.2,
+            488.1
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "actual_screws": 1,
+      "angle_deg": 0.0,
+      "bbox_xywh": [
+        951.0,
+        399.0,
+        298.0,
+        199.0
+      ],
+      "block_id": 2,
+      "expected_screws": 2,
+      "orientation": "0_DEG_CONFIRMED",
+      "reason": "MISSING_SCREW",
+      "screws": [
+        {
+          "id": 1,
+          "name": "侧面M2",
+          "roi_center_xy": [
+            1035.1,
+            536.6
+          ],
+          "score": 0.11,
+          "status": "MISSING"
+        },
+        {
+          "id": 2,
+          "name": "关节M2",
+          "roi_center_xy": [
+            1128.2,
+            488.1
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        }
+      ],
+      "status": "DEFECT"
+    }
+  ],
+  "cycle_id": "cyc_002",
+  "device_id": "recamera-sg2002-station01",
+  "frame_id": 102,
+  "overall_reason": "DEFECT_MISSING_SCREW",
+  "overall_status": "DEFECT",
+  "schema_version": "2.4",
+  "summary": {
+    "actual_blocks": 2,
+    "cannot_inspect_blocks": 0,
+    "defect_blocks": 1,
+    "expected_blocks": 2,
+    "passed_blocks": 1
+  },
+  "timestamp": 1001.0
+}
+[PASS] test_missing_screw passed.
+[RUN] test_orientation_ambiguous...
+[DEBUG test_orientation_ambiguous payload]:
+{
+  "app_version": "1.0.0",
+  "applied_revision": 1,
+  "blocks": [
+    {
+      "actual_screws": 2,
+      "angle_deg": 0.0,
+      "bbox_xywh": [
+        249.0,
+        399.0,
+        298.0,
+        199.0
+      ],
+      "block_id": 1,
+      "expected_screws": 2,
+      "orientation": "0_DEG_CONFIRMED",
+      "reason": "OK",
+      "screws": [
+        {
+          "id": 1,
+          "name": "侧面M2",
+          "roi_center_xy": [
+            333.1,
+            536.6
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        },
+        {
+          "id": 2,
+          "name": "关节M2",
+          "roi_center_xy": [
+            426.2,
+            488.1
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "actual_screws": 0,
+      "angle_deg": 0.0,
+      "bbox_xywh": [
+        951.0,
+        399.0,
+        298.0,
+        199.0
+      ],
+      "block_id": 2,
+      "expected_screws": 2,
+      "orientation": "ORIENTATION_AMBIGUOUS",
+      "reason": "CANNOT_INSPECT_ORIENTATION",
+      "screws": [],
+      "status": "CANNOT_INSPECT"
+    }
+  ],
+  "cycle_id": "cyc_003",
+  "device_id": "recamera-sg2002-station01",
+  "frame_id": 103,
+  "overall_reason": "CANNOT_INSPECT_ORIENTATION",
+  "overall_status": "CANNOT_INSPECT",
+  "schema_version": "2.4",
+  "summary": {
+    "actual_blocks": 2,
+    "cannot_inspect_blocks": 1,
+    "defect_blocks": 0,
+    "expected_blocks": 2,
+    "passed_blocks": 1
+  },
+  "timestamp": 1002.0
+}
+[PASS] test_orientation_ambiguous passed.
+[RUN] test_patch_out_of_bounds...
+[DEBUG test_patch_out_of_bounds payload]:
+{
+  "app_version": "1.0.0",
+  "applied_revision": 1,
+  "blocks": [
+    {
+      "actual_screws": 2,
+      "angle_deg": 0.0,
+      "bbox_xywh": [
+        249.0,
+        399.0,
+        298.0,
+        199.0
+      ],
+      "block_id": 1,
+      "expected_screws": 2,
+      "orientation": "0_DEG_CONFIRMED",
+      "reason": "OK",
+      "screws": [
+        {
+          "id": 1,
+          "name": "侧面M2",
+          "roi_center_xy": [
+            333.1,
+            536.6
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        },
+        {
+          "id": 2,
+          "name": "边缘M2",
+          "roi_center_xy": [
+            527.2,
+            488.1
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "actual_screws": 1,
+      "angle_deg": 0.0,
+      "bbox_xywh": [
+        1620.0,
+        399.0,
+        298.0,
+        199.0
+      ],
+      "block_id": 2,
+      "expected_screws": 2,
+      "orientation": "0_DEG_CONFIRMED",
+      "reason": "CANNOT_INSPECT_ROI_OOB",
+      "screws": [
+        {
+          "id": 1,
+          "name": "侧面M2",
+          "roi_center_xy": [
+            1704.2,
+            536.6
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        },
+        {
+          "id": 2,
+          "name": "边缘M2",
+          "roi_center_xy": [
+            1898.2,
+            488.1
+          ],
+          "score": -1.0,
+          "status": "CANNOT_INSPECT"
+        }
+      ],
+      "status": "CANNOT_INSPECT"
+    }
+  ],
+  "cycle_id": "cyc_004",
+  "device_id": "recamera-sg2002-station01",
+  "frame_id": 104,
+  "overall_reason": "CANNOT_INSPECT_ROI_OOB",
+  "overall_status": "CANNOT_INSPECT",
+  "schema_version": "2.4",
+  "summary": {
+    "actual_blocks": 2,
+    "cannot_inspect_blocks": 1,
+    "defect_blocks": 0,
+    "expected_blocks": 2,
+    "passed_blocks": 1
+  },
+  "timestamp": 1003.0
+}
+[PASS] test_patch_out_of_bounds passed.
+[RUN] test_under_count...
+[PASS] test_under_count passed.
+[RUN] test_over_count_and_capacity...
+[PASS] test_over_count_and_capacity passed.
+[RUN] test_four_screws_multi_block...
+[DEBUG test_four_screws_multi_block payload]:
+{
+  "app_version": "1.0.0",
+  "applied_revision": 2,
+  "blocks": [
+    {
+      "actual_screws": 4,
+      "angle_deg": 0.0,
+      "bbox_xywh": [
+        249.0,
+        351.0,
+        400.0,
+        298.0
+      ],
+      "block_id": 1,
+      "expected_screws": 4,
+      "orientation": "0_DEG_CONFIRMED",
+      "reason": "OK",
+      "screws": [
+        {
+          "id": 1,
+          "name": "M2_TL",
+          "roi_center_xy": [
+            388.6,
+            440.1
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        },
+        {
+          "id": 2,
+          "name": "M2_TR",
+          "roi_center_xy": [
+            547.3,
+            440.1
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        },
+        {
+          "id": 3,
+          "name": "M2_BL",
+          "roi_center_xy": [
+            388.6,
+            557.9
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        },
+        {
+          "id": 4,
+          "name": "M2_BR",
+          "roi_center_xy": [
+            547.3,
+            557.9
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "actual_screws": 3,
+      "angle_deg": 0.0,
+      "bbox_xywh": [
+        999.0,
+        351.0,
+        400.0,
+        298.0
+      ],
+      "block_id": 2,
+      "expected_screws": 4,
+      "orientation": "0_DEG_CONFIRMED",
+      "reason": "MISSING_SCREW",
+      "screws": [
+        {
+          "id": 1,
+          "name": "M2_TL",
+          "roi_center_xy": [
+            1138.6,
+            440.1
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        },
+        {
+          "id": 2,
+          "name": "M2_TR",
+          "roi_center_xy": [
+            1297.3,
+            440.1
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        },
+        {
+          "id": 3,
+          "name": "M2_BL",
+          "roi_center_xy": [
+            1138.6,
+            557.9
+          ],
+          "score": 0.91,
+          "status": "PRESENT"
+        },
+        {
+          "id": 4,
+          "name": "M2_BR",
+          "roi_center_xy": [
+            1297.3,
+            557.9
+          ],
+          "score": 0.11,
+          "status": "MISSING"
+        }
+      ],
+      "status": "DEFECT"
+    }
+  ],
+  "cycle_id": "cyc_008",
+  "device_id": "recamera-sg2002-station01",
+  "frame_id": 108,
+  "overall_reason": "DEFECT_MISSING_SCREW",
+  "overall_status": "DEFECT",
+  "schema_version": "2.4",
+  "summary": {
+    "actual_blocks": 2,
+    "cannot_inspect_blocks": 0,
+    "defect_blocks": 1,
+    "expected_blocks": 2,
+    "passed_blocks": 1
+  },
+  "timestamp": 1007.0
+}
+[PASS] test_four_screws_multi_block passed.
+[EVIDENCE] geometry angle=0 center=[700, 550] dimensions=837.222x214.375 detected_angle=90
+[TEST FAILED] /home/harvest/project/microduck/screw-guard/native/test_screw_inspector.cpp:1018: geometry dimensions within 8 pixels
+
+    Start 2: test_config_loader
+2/2 Test #2: test_config_loader ...............   Passed    0.00 sec
+
+50% tests passed, 1 tests failed out of 2
+
+Total Test time (real) =   0.48 sec
+
+The following tests FAILED:
+	  1 - test_screw_inspector (Failed)
+Errors while running CTest

@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ScrewGuardResultPayload",
+  "type": "object",
+  "required": [
+    "schema_version", "device_id", "app_version", "applied_revision",
+    "cycle_id", "frame_id", "timestamp", "overall_status", "overall_reason",
+    "summary", "blocks"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["2.4"] },
+    "device_id": { "type": "string" },
+    "app_version": { "type": "string" },
+    "applied_revision": { "type": "integer", "minimum": 1 },
+    "cycle_id": { "type": "string" },
+    "frame_id": { "type": "integer", "minimum": 0 },
+    "timestamp": { "type": "number" },
+    "overall_status": { "type": "string", "enum": ["PASS", "DEFECT", "CANNOT_INSPECT"] },
+    "overall_reason": {
+      "type": "string",
+      "enum": [
+        "OK", "DEFECT_UNDER_COUNT", "DEFECT_OVER_COUNT", "DEFECT_MISSING_SCREW",
+        "CANNOT_INSPECT_ORIENTATION", "CANNOT_INSPECT_ROI_OOB", "CANNOT_INSPECT_LOW_CONFIDENCE"
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "required": ["expected_blocks", "actual_blocks", "passed_blocks", "defect_blocks", "cannot_inspect_blocks"],
+      "properties": {
+        "expected_blocks": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "actual_blocks": { "type": "integer", "minimum": 0 },
+        "passed_blocks": { "type": "integer", "minimum": 0 },
+        "defect_blocks": { "type": "integer", "minimum": 0 },
+        "cannot_inspect_blocks": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "block_id", "bbox_xywh", "angle_deg", "orientation", "status",
+          "reason", "expected_screws", "actual_screws", "screws"
+        ],
+        "properties": {
+          "block_id": { "type": "integer", "minimum": 1 },
+          "bbox_xywh": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+          "angle_deg": { "type": "number" },
+          "orientation": { "type": "string", "enum": ["0_DEG_CONFIRMED", "180_DEG_CONFIRMED", "ORIENTATION_AMBIGUOUS"] },
+          "status": { "type": "string", "enum": ["PASS", "DEFECT", "CANNOT_INSPECT"] },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "OK", "MISSING_SCREW", "CANNOT_INSPECT_ORIENTATION",
+              "CANNOT_INSPECT_ROI_OOB", "CANNOT_INSPECT_LOW_CONFIDENCE", "UNINSPECTED_OVER_CAPACITY"
+            ]
+          },
+          "expected_screws": { "type": "integer", "minimum": 1, "maximum": 32 },
+          "actual_screws": { "type": "integer", "minimum": 0, "maximum": 32 },
+          "screws": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "name", "status", "score", "roi_center_xy"],
+              "properties": {
+                "id": { "type": "integer", "minimum": 1 },
+                "name": { "type": "string" },
+                "status": { "type": "string", "enum": ["PRESENT", "MISSING", "UNCERTAIN", "CANNOT_INSPECT"] },
+                "score": { "type": "number", "minimum": -1.0, "maximum": 1.0 },
+                "roi_center_xy": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

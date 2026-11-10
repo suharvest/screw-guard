@@ -1,0 +1,10 @@
+Internal ctest changing into directory: /home/harvest/project/microduck/screw-guard/native/build-offline
+Test project /home/harvest/project/microduck/screw-guard/native/build-offline
+    Start 1: test_screw_inspector
+1/2 Test #1: test_screw_inspector .............   Passed    1.01 sec
+    Start 2: test_config_loader
+2/2 Test #2: test_config_loader ...............   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   1.02 sec

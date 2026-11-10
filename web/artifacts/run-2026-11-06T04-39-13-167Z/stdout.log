@@ -1,0 +1,38 @@
+[CHECKPOINT 01/25] 页面可访问且无外部依赖
+[CHECKPOINT 02/25] 控件上传实物样品
+[CHECKPOINT 03/25] 真实鼠标绘制工件框
+[CHECKPOINT 04/25] 真实鼠标绘制方向锚点
+[CHECKPOINT 05/25] 真实鼠标标注第1孔
+[CHECKPOINT 06/25] 真实鼠标标注第2孔
+[TRIAL] DEFECT
+MISSING_SCREW
+孔	Patch	edge	高光	score	状态
+1 螺孔1	
+	46.5	46.9%	1.00	PRESENT
+2 螺孔2	
+	1.5	0.0%	0.03	MISSING
+门限 0.60 · MISSING < 0.35 · Patch 19px（原图 750×882，按 1920 宽基准 48px 缩放后重采样到 48×48）
+锚点边缘能量 0°=10.5 · 180°对照=22.8 · 区分度 -54%
+区分度低于 25%，设备
+[CHECKPOINT 07/25] 两孔实物离线试检精确裁决
+[STATE BEFORE EXPORT] {"w":300,"h":200,"rois":2,"roiPx":[{"x":236,"y":70,"r":16},{"x":65,"y":130,"r":16}],"profile":"{\"revision\":0,\"part_name\":\"leg_joint\",\"expected_blocks\":2,\"expected_screws_per_block\":2,\"canonical_size\":[300,200],\"min_block_area\":4000,\"anchor\":{\"norm_x\":0.1304,\"norm_y\":0.3467,\"norm_w\":0.16,\"norm_h\":0.45,\"ref_edge_mean\":10.5},\"screw_rois\":[{\"id\":1,\"name\":\"螺孔1\",\"norm_x\":0.7893,\"norm_y\":0.3518,\"norm_r\":0.08},{\"id\":2,\"name\":\"螺孔2\",\"norm_x\":0.2174,\"norm_y\":0.6533,\"norm_r\":0.08}]}","params":{"part_name":"leg_joint","expected_blocks":2,"max_blocks":4,"min_block_area":4000,"confidence_threshold":0.6},"disabled":false,"checks":"已加载底图\n已框选工件\n标准尺寸 300×200 为 30~1280 整数\n已标记方向锚点\n锚点完整位于 300×200 画布内（≥4px）\n锚点 ref_edge_mean 有效（10.5）\n螺孔数 1~32（当前 2）\n螺孔1 边界：x−r≥0 ∧ x+r<300 ∧ y−r≥0 ∧ y+r<200（x=236 y=70 r=16）\n螺孔1 已命名\n螺孔2 边界：x−r≥0 ∧ x+r<300 ∧ y−r≥0 ∧ y+r<200（x=65 y=130 r=16）\n螺孔2 已命名\nexpected_screws_per_block == screw_rois.length（2）\n1 ≤ 每批工件数(2) ≤ 单帧最大(4) ≤ 4\n0.50 ≤ 置信度门限 ≤ 0.95\n工件名称非空\n最小工件面积 > 0\nprofile_json 388 / 4096 字节\n[下发] 已连接设备并读取配置\n[下发] 已对当前配方执行试检\n[下发] 试检结果为 PASS（当前 DEFECT）"}
+[CHECKPOINT 08/25] 两孔真实点击导出
+[CHECKPOINT 09/25] 两孔导出 schema 校验
+[CHECKPOINT 10/25] 导入回读尺寸与孔数
+[CHECKPOINT 11/25] 四孔横向导出 schema
+[CHECKPOINT 12/25] 四孔竖向导出 schema
+[CHECKPOINT 13/25] 整数尺寸边界
+[CHECKPOINT 14/25] 32孔真实鼠标标注并强制导出
+[CHECKPOINT 15/25] 33孔真实鼠标点击被拒绝
+[CHECKPOINT 16/25] 30x30边界通过导入控件
+[CHECKPOINT 17/25] 1280x1280边界通过导入控件
+[CHECKPOINT 18/25] 非法尺寸通过导入控件拒绝
+[CHECKPOINT 19/25] 极端比例真实图片框选拒绝
+[CHECKPOINT 20/25] 非法 mismatch 导入不改完整状态
+[CHECKPOINT 21/25] 非法尺寸导入不改完整状态
+[CHECKPOINT 22/25] 合法配方再次导入
+[CHECKPOINT 23/25] 无静默截断提示
+[CHECKPOINT 24/25] 控制台无 pageerror
+[SCREENSHOT] /home/harvest/project/microduck/screw-guard/web/artifacts/run-2026-11-06T04-39-13-167Z/25_final.png
+[CHECKPOINT 25/25] 截图、原始日志与源码 hash
+[E2E] PASS 25 checkpoints; artifacts=/home/harvest/project/microduck/screw-guard/web/artifacts/run-2026-11-06T04-39-13-167Z

@@ -1,0 +1,153 @@
+--- before/screw_inspector.cpp
++++ native/screw_inspector.cpp
+@@ -154,13 +154,15 @@
+         double area = cv::contourArea(c);
+         if (area < scaled_min_area) continue;
+ 
+-        cv::RotatedRect r = cv::minAreaRect(c);
+-        cv::Point2f center_orig(r.center.x * static_cast<float>(scale_x),
+-                                r.center.y * static_cast<float>(scale_y));
+-        cv::Size2f size_orig(r.size.width * static_cast<float>(scale_x),
+-                             r.size.height * static_cast<float>(scale_y));
+-        cv::RotatedRect r_orig(center_orig, size_orig, r.angle);
+-        detected.push_back(r_orig);
++        // Restore contour coordinates before fitting: anisotropic scaling changes
++        // both the angle and the side lengths of a rotated rectangle.
++        std::vector<cv::Point2f> original_contour;
++        original_contour.reserve(c.size());
++        for (const auto& point : c) {
++            original_contour.emplace_back(point.x * static_cast<float>(scale_x),
++                                          point.y * static_cast<float>(scale_y));
++        }
++        detected.push_back(cv::minAreaRect(original_contour));
+     }
+ 
+     // Sort detected blocks using strict (x, y) lexicographical order to guarantee Strict Weak Ordering
+--- before/test_screw_inspector.cpp
++++ native/test_screw_inspector.cpp
+@@ -999,40 +999,68 @@
+     std::cout << "[PASS] test_four_screws_multi_block passed." << std::endl;
+ }
+ 
++static void test_nonuniform_resize_geometry() {
++    AppConfig cfg; std::string code, msg;
++    TEST_ASSERT(ConfigValidator::parse_app_config(DEFAULT_VALID_PROFILE, 0.60, 4, cfg, code, msg), "geometry config");
++    ScrewInspector inspector(cfg);
++    for (float angle : {0.0f, 27.0f}) {
++        cv::Mat scene(1100, 1400, CV_8UC3, cv::Scalar(0, 0, 0));
++        cv::RotatedRect expected(cv::Point2f(700, 550), cv::Size2f(600, 300), angle);
++        cv::Point2f corners[4]; expected.points(corners);
++        std::vector<cv::Point> polygon; for (auto p : corners) polygon.push_back(p);
++        cv::fillConvexPoly(scene, polygon, cv::Scalar(80, 100, 130));
++        auto boxes = inspector.coarse_detect_blocks(scene);
++        TEST_ASSERT(boxes.size() == 1, "one geometry box");
++        float width = std::max(boxes[0].size.width, boxes[0].size.height);
++        float height = std::min(boxes[0].size.width, boxes[0].size.height);
++        std::cerr << "[EVIDENCE] geometry angle=" << angle << " center=" << boxes[0].center << " dimensions=" << width << "x" << height << " detected_angle=" << boxes[0].angle << "\n";
++        TEST_ASSERT(cv::norm(boxes[0].center - expected.center) < 5, "geometry center within 5 pixels");
++        TEST_ASSERT(std::abs(width - 600) < 8 && std::abs(height - 300) < 8, "geometry dimensions within 8 pixels");
++        float observed = boxes[0].angle; if (boxes[0].size.width < boxes[0].size.height) observed += 90;
++        TEST_ASSERT(std::abs(std::remainder(observed - angle, 180.0f)) < 1, "geometry angle within 1 degree");
++    }
++}
++
+ static void test_vertical_and_32_screw_profiles() {
+     std::cout << "[RUN] test_vertical_and_32_screw_profiles..." << std::endl;
+-    nlohmann::json p32 = {
+-        {"revision", 2}, {"part_name", "grid32"}, {"expected_blocks", 1},
+-        {"expected_screws_per_block", 32}, {"canonical_size", {300, 200}},
+-        {"anchor", {{"norm_x", 0.15}, {"norm_y", 0.5}, {"norm_w", 0.15}, {"norm_h", 0.25}, {"ref_edge_mean", 32.5}}},
+-        {"screw_rois", nlohmann::json::array()}
+-    };
+-    std::vector<SyntheticScrewDef> screws;
+-    for (int row = 0; row < 4; ++row) for (int col = 0; col < 8; ++col) {
+-        const int x = static_cast<int>(std::round((0.18 + col * 0.092) * 299));
+-        const int y = static_cast<int>(std::round((0.18 + row * 0.214) * 199));
+-        p32["screw_rois"].push_back({{"id", row * 8 + col + 1}, {"norm_x", x / 299.0}, {"norm_y", y / 199.0}, {"norm_r", 0.03}});
+-        screws.push_back({x, y, true, false});
+-    }
+-    AppConfig cfg; std::string code, msg;
+-    TEST_ASSERT(ConfigValidator::parse_app_config(p32.dump(), 0.60, 4, cfg, code, msg), "32-screw profile must parse");
+-    ScrewInspector inspector(cfg);
+-    SyntheticBlockDef block; block.center = cv::Point2f(500, 500); block.canon_w = 300; block.canon_h = 200; block.custom_screws = screws;
+-    InspectionResult result = inspector.inspect(generate_synthetic_scene(1200, 900, {block}), 32, "vertical-grid", 1.0);
+-    TEST_ASSERT(result.summary.expected_blocks == 1, "32-screw expected block count");
+-    TEST_ASSERT(result.blocks.size() == 1, "32-screw inspect returns one block");
+-    TEST_ASSERT(result.blocks[0].expected_screws == 32, "32-screw result expected count");
+-    TEST_ASSERT(result.blocks[0].screws.size() == 32, "32-screw result has 32 screw records");
+-
+-    nlohmann::json vertical = p32;
+-    vertical["revision"] = 3; vertical["expected_screws_per_block"] = 2; vertical["canonical_size"] = {200, 400};
+-    vertical["screw_rois"] = {{{"id", 1}, {"norm_x", 0.5}, {"norm_y", 0.35}, {"norm_r", 0.04}},
+-                               {{"id", 2}, {"norm_x", 0.5}, {"norm_y", 0.65}, {"norm_r", 0.04}}};
+-    TEST_ASSERT(ConfigValidator::parse_app_config(vertical.dump(), 0.60, 4, cfg, code, msg), "vertical profile must parse");
+-    ScrewInspector vertical_inspector(cfg);
+-    InspectionResult vertical_result = vertical_inspector.inspect(generate_synthetic_scene(900, 1200, {SyntheticBlockDef(cv::Point2f(450, 600), 0, false, true, false, true, true, false, false, 100, 140, 100, 260, 200, 400)}), 33, "vertical", 2.0);
+-    TEST_ASSERT(vertical_result.summary.expected_blocks == 1, "vertical expected block count");
+-    TEST_ASSERT(vertical_result.to_json().find("\"blocks\"") != std::string::npos, "vertical result serialized");
++    for (bool vertical : {false, true}) for (int count : {2, 32}) {
++        int w = vertical ? 800 : 1000, h = vertical ? 1000 : 800;
++        nlohmann::json profile = {
++            {"revision", 2}, {"expected_blocks", 1}, {"expected_screws_per_block", count},
++            {"canonical_size", {w, h}},
++            {"anchor", {{"norm_x", 0.15}, {"norm_y", 0.5}, {"norm_w", 0.15}, {"norm_h", 0.25}, {"ref_edge_mean", 8.0}}},
++            {"screw_rois", nlohmann::json::array()}
++        };
++        SyntheticBlockDef block; block.center = cv::Point2f(700, 650); block.canon_w = w; block.canon_h = h;
++        for (int i = 0; i < count; ++i) {
++            int x = vertical ? 210 + 50 * (i % 8) : 260 + 70 * (i % 8);
++            int y = vertical ? 180 + 200 * (i / 8) : 140 + 160 * (i / 8);
++            profile["screw_rois"].push_back({{"id", i+1}, {"norm_x", double(x)/(w-1)}, {"norm_y", double(y)/(h-1)}, {"norm_r", 0.025}});
++            block.custom_screws.push_back({x, y, true, false});
++        }
++        AppConfig cfg; std::string code, msg;
++        TEST_ASSERT(ConfigValidator::parse_app_config(profile.dump(), 0.60, 4, cfg, code, msg), "profile parses");
++        ScrewInspector inspector(cfg);
++        for (bool missing : {false, true}) {
++            block.custom_screws.back().present = !missing;
++            auto result = inspector.inspect(generate_synthetic_scene(1400, 1300, {block}), 32, "grid", 1.0);
++            TEST_ASSERT(result.blocks.size() == 1 && result.summary.actual_blocks == 1, "one actual block");
++            const auto& b = result.blocks[0];
++            std::cerr << "[EVIDENCE] vertical=" << vertical << " count=" << count << " missing=" << missing << " status=" << block_status_to_string(b.status) << " actual=" << b.actual_screws << " orientation=" << orientation_to_string(b.orientation) << "\n";
++            TEST_ASSERT(b.orientation == OrientationStatus::CONFIRMED_0_DEG, "confirmed orientation");
++            TEST_ASSERT(b.expected_screws == count && b.actual_screws == count - int(missing), "exact screw counts");
++            TEST_ASSERT(b.screws.size() == size_t(count), "exact screw records");
++            TEST_ASSERT(b.status == (missing ? BlockStatus::DEFECT : BlockStatus::PASS), "exact block status");
++            TEST_ASSERT(result.overall_status == (missing ? OverallStatus::DEFECT : OverallStatus::PASS), "exact overall status");
++            for (int i = 0; i < count; ++i) {
++                TEST_ASSERT(b.screws[i].status == ((missing && i == count-1) ? ScrewStatus::MISSING : ScrewStatus::PRESENT), "exact screw presence");
++                auto xy = b.screws[i].roi_center_xy;
++                TEST_ASSERT(std::abs(xy.first - (700-w/2+block.custom_screws[i].xc)) < 5 &&
++                            std::abs(xy.second - (650-h/2+block.custom_screws[i].yc)) < 5, "source screw coordinates within 5 pixels");
++            }
++            TEST_ASSERT(validate_schema_with_python(result.to_json(), SCHEMA_PATH), "grid output schema");
++        }
++    }
+     std::cout << "[PASS] test_vertical_and_32_screw_profiles passed." << std::endl;
+ }
+ 
+@@ -1052,6 +1080,7 @@
+     test_under_count();
+     test_over_count_and_capacity();
+     test_four_screws_multi_block();
++    test_nonuniform_resize_geometry();
+     test_vertical_and_32_screw_profiles();
+ 
+     std::cout << "========================================" << std::endl;
+--- before/test_config_loader.cpp
++++ native/test_config_loader.cpp
+@@ -31,5 +31,14 @@
+     check(!ConfigValidator::load_file(p, c, code, msg) && code == "INVALID_PROFILE_SCREWS_COUNT", "33 screws rejection");
+     std::ofstream(p) << "{\"profile_json\":" << std::quoted(profile) << ",\"confidence_threshold\":0.6,\"max_blocks\":18446744073709551615}";
+     check(!ConfigValidator::load_file(p, c, code, msg) && code == "INVALID_MAX_BLOCKS", "uint64 max_blocks rejection");
++    std::ofstream(p) << "{\"profile_json\":" << std::quoted(profile) << ",\"confidence_threshold\":0.6,\"max_blocks\":4294967300}";
++    check(!ConfigValidator::load_file(p, c, code, msg) && code == "INVALID_MAX_BLOCKS", "wrapped int32 max_blocks rejection");
++    for (const std::string value : {"4294967297", "18446744073709551615"}) {
++        std::string overflow = profile;
++        auto offset = overflow.find("\"expected_screws_per_block\":1");
++        overflow.replace(offset, std::string("\"expected_screws_per_block\":1").size(), "\"expected_screws_per_block\":" + value);
++        std::ofstream(p) << "{\"profile_json\":" << std::quoted(overflow) << ",\"confidence_threshold\":0.6,\"max_blocks\":4}";
++        check(!ConfigValidator::load_file(p, c, code, msg) && code == "INVALID_PROFILE_SCREWS_MISMATCH", "expected screws overflow rejection");
++    }
+     unlink(p.c_str()); std::cout << "config loader tests passed\n"; return 0;
+ }

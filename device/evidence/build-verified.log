@@ -1,0 +1,60 @@
+-- CMAKE_C_COMPILER: riscv64-unknown-linux-musl-gcc
+-- CMAKE_CXX_COMPILER: riscv64-unknown-linux-musl-g++
+-- SG200X_SDK_PATH: /workspace/sg2002_recamera_emmc
+-- SYSROOT: /workspace/sg2002_recamera_emmc/buildroot-2021.05/output/cvitek_CV181X_musl_riscv64/host/riscv64-buildroot-linux-musl/sysroot
+-- Registering component main
+-- Including /workspace/_scratch/screw-guard-build-v2/include
+-- Including /workspace/_scratch/screw-guard-native-5/device/main
+-- Including /workspace/_scratch/screw-guard-native-5/device/main/../../native
+-- component: debug_stream
+-- Registering component debug_stream
+-- Including /workspace/_scratch/screw-guard-sdk/components/debug_stream/include
+-- component: geometry
+-- component: ha_mqtt
+-- Registering component ha_mqtt
+-- Including /workspace/_scratch/screw-guard-sdk/components/ha_mqtt/include
+-- component: json
+-- component: libwebsockets
+-- libwebsockets: private /workspace/_scratch/screw-guard-sdk/components/libwebsockets/prebuilt (ahead of SDK 4.0.22/4.1.7)
+-- component: onvif_meta
+-- component: onvif_service
+-- component: privacy_blur
+-- component: quirc
+-- component: rgn
+-- component: rtsp_server
+-- Registering component rtsp_server
+-- Including /workspace/_scratch/screw-guard-sdk/components/rtsp_server/include
+-- component: sophgo
+-- Registering component sophgo
+-- Including /workspace/_scratch/screw-guard-sdk/components/sophgo/common
+-- Including /workspace/_scratch/screw-guard-sdk/components/sophgo/video/
+-- Including /workspace/_scratch/screw-guard-sdk/components/sophgo/video/include/
+-- component: sscma-micro
+-- INCS_EIGEN: /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen;/workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen/Eigen
+-- Registering component sscma-micro
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/eigen/eigen/Eigen
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/3rdparty/json/cJSON
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/sscma-micro/sscma
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x
+-- Including /workspace/_scratch/screw-guard-sdk/components/sscma-micro/porting/sophgo/sg200x/recamera
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /workspace/_scratch/screw-guard-build-v2
+Consolidate compiler generated dependencies of target ha_mqtt
+Consolidate compiler generated dependencies of target sophgo
+[  2%] Built target ha_mqtt
+[ 18%] Built target sophgo
+Consolidate compiler generated dependencies of target debug_stream
+Consolidate compiler generated dependencies of target rtsp_server
+Consolidate compiler generated dependencies of target sscma-micro
+[ 22%] Built target debug_stream
+[ 25%] Built target rtsp_server
+[ 91%] Built target sscma-micro
+Consolidate compiler generated dependencies of target main
+[ 97%] Built target main
+Consolidate compiler generated dependencies of target screw-guard
+[ 98%] Building C object CMakeFiles/screw-guard.dir/dummy.c.o
+[100%] Linking CXX executable screw-guard
+[100%] Built target screw-guard

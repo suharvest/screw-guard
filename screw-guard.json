@@ -1,0 +1,61 @@
+{
+  "id": "screw-guard",
+  "name": "ScrewGuard Inspector",
+  "name_zh": "紧固件螺丝防漏检系统",
+  "scene": "Industrial QA",
+  "scene_zh": "工业质检",
+  "description": "Ultra-low-footprint C++ screw missing and presence inspector for Microduck on reCamera SG2002 (supports 1~32 screws, custom aspect ratios).",
+  "description_zh": "专为 reCamera SG2002 打造的超低内存 C++ 螺丝漏打与质检应用，支持任意比例工件与 1~32 颗多孔防呆。",
+  "type": "native",
+  "init_script": "/etc/init.d/K95screw-guard",
+  "image": "/apps/screw-guard.png",
+  "rtsp_url": "rtsp://{host}:8554/live0",
+  "mqtt_topic": "recamera/screw-guard/results",
+  "debug_ws": {
+    "port": 8001,
+    "video_path": "/",
+    "results_path": "/results"
+  },
+  "version": "1.0.0",
+  "author": "Seeed Studio",
+  "config_schema": {
+    "groups": [
+      {
+        "key": "inspection",
+        "title": "Inspection Configuration",
+        "title_zh": "质检配置参数",
+        "items": [
+          {
+            "key": "profile_json",
+            "type": "string",
+            "title": "Recipe Profile (JSON)",
+            "title_zh": "工件与螺孔配方参数",
+            "description": "由前端标定工具生成的标准化配方 JSON 字符串 (支持 1~32 颗螺孔与任意尺寸对齐画布, 最大 4096 字节)",
+            "maxLength": 4096,
+            "default": "{\"revision\":1,\"part_name\":\"leg_joint\",\"expected_blocks\":2,\"expected_screws_per_block\":4,\"canonical_size\":[300,200],\"min_block_area\":4000,\"anchor\":{\"norm_x\":0.15,\"norm_y\":0.5,\"norm_w\":0.15,\"norm_h\":0.25,\"ref_edge_mean\":32.5},\"screw_rois\":[{\"id\":1,\"name\":\"侧面M2_1\",\"norm_x\":0.283,\"norm_y\":0.300,\"norm_r\":0.080},{\"id\":2,\"name\":\"侧面M2_2\",\"norm_x\":0.283,\"norm_y\":0.700,\"norm_r\":0.080},{\"id\":3,\"name\":\"关节M2_1\",\"norm_x\":0.600,\"norm_y\":0.300,\"norm_r\":0.080},{\"id\":4,\"name\":\"关节M2_2\",\"norm_x\":0.600,\"norm_y\":0.700,\"norm_r\":0.080}]}"
+          },
+          {
+            "key": "confidence_threshold",
+            "type": "number",
+            "title": "Confidence Threshold",
+            "title_zh": "螺丝综合置信度门限",
+            "min": 0.50,
+            "max": 0.95,
+            "step": 0.05,
+            "default": 0.60
+          },
+          {
+            "key": "max_blocks",
+            "type": "number",
+            "title": "Max Blocks / Frame",
+            "title_zh": "单帧最大检测工件数",
+            "min": 1,
+            "max": 4,
+            "step": 1,
+            "default": 4
+          }
+        ]
+      }
+    ]
+  }
+}

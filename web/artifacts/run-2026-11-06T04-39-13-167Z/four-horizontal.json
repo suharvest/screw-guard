@@ -1,0 +1,62 @@
+{
+  "format": "screw-guard-calib/1",
+  "exported_at": "2026-11-06T04:39:16.771Z",
+  "profile": {
+    "revision": 2,
+    "part_name": "leg_joint",
+    "expected_blocks": 2,
+    "expected_screws_per_block": 4,
+    "canonical_size": [
+      300,
+      118
+    ],
+    "min_block_area": 4000,
+    "anchor": {
+      "norm_x": 0.1304,
+      "norm_y": 0.3479,
+      "norm_w": 0.16,
+      "norm_h": 0.45,
+      "ref_edge_mean": 46.5
+    },
+    "screw_rois": [
+      {
+        "id": 1,
+        "name": "螺孔1",
+        "norm_x": 0.1806,
+        "norm_y": 0.1815,
+        "norm_r": 0.08
+      },
+      {
+        "id": 2,
+        "name": "螺孔2",
+        "norm_x": 0.2723,
+        "norm_y": 0.1815,
+        "norm_r": 0.08
+      },
+      {
+        "id": 3,
+        "name": "螺孔3",
+        "norm_x": 0.3641,
+        "norm_y": 0.1815,
+        "norm_r": 0.08
+      },
+      {
+        "id": 4,
+        "name": "螺孔4",
+        "norm_x": 0.4558,
+        "norm_y": 0.1815,
+        "norm_r": 0.08
+      }
+    ]
+  },
+  "confidence_threshold": 0.6,
+  "max_blocks": 4,
+  "part_rect": {
+    "cx": 814.3334836279652,
+    "cy": 352.48445654274855,
+    "w": 627.6192897975802,
+    "h": 246.73911957992397,
+    "angle": 0
+  },
+  "profile_json": "{\"revision\":2,\"part_name\":\"leg_joint\",\"expected_blocks\":2,\"expected_screws_per_block\":4,\"canonical_size\":[300,118],\"min_block_area\":4000,\"anchor\":{\"norm_x\":0.1304,\"norm_y\":0.3479,\"norm_w\":0.16,\"norm_h\":0.45,\"ref_edge_mean\":46.5},\"screw_rois\":[{\"id\":1,\"name\":\"螺孔1\",\"norm_x\":0.1806,\"norm_y\":0.1815,\"norm_r\":0.08},{\"id\":2,\"name\":\"螺孔2\",\"norm_x\":0.2723,\"norm_y\":0.1815,\"norm_r\":0.08},{\"id\":3,\"name\":\"螺孔3\",\"norm_x\":0.3641,\"norm_y\":0.1815,\"norm_r\":0.08},{\"id\":4,\"name\":\"螺孔4\",\"norm_x\":0.4558,\"norm_y\":0.1815,\"norm_r\":0.08}]}"
+}

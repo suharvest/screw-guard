@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/home/harvest/project/microduck/screw-guard/web/validate_schema.py", line 89, in <module>
+    main()
+  File "/home/harvest/project/microduck/screw-guard/web/validate_schema.py", line 73, in main
+    with open(file_path, "r", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/harvest/project/microduck/screw-guard/web/artifacts/review/export-success.json'

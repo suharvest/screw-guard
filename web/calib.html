@@ -1,0 +1,1453 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScrewGuard 现场标定工具</title>
+<!--
+  ScrewGuard 现场标定工具（单文件，零外部依赖）
+  依据：screw-guard/SPEC.md v3.5 §2.1 §2.2 §3.1 §3.2 §4.1 §4.2 §4.3
+  - 画布 1：底图 + 旋转矩形框选单个工件 → 仿射正交化为 300×200 标准视图
+  - 画布 2：方向锚点（蓝框）+ 螺孔 ROI（绿圆，≤2）
+  - 试检：前端复刻 §4.1 Sobel/高光打分 + §4.2 聚合
+  - 下发：Read-Merge-Write + debug_ws 200ms 轮询 + 6s 熔断
+-->
+<style>
+:root{
+  --bg:#0f1215; --panel:#171b20; --panel2:#1e242b; --line:#2c343d; --text:#e6eaee; --muted:#8b96a3;
+  --blue:#3b82f6; --green:#22c55e; --red:#ef4444; --amber:#f59e0b; --accent:#38bdf8;
+  --radius:10px; --tap:44px;
+  font-family: system-ui, -apple-system, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-size:15px}
+button,input,select{font:inherit;color:inherit}
+button{min-height:var(--tap);padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;white-space:nowrap;touch-action:manipulation}
+button:hover:not(:disabled){border-color:#4b5663}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.primary{background:#0e7490;border-color:#0891b2}
+button.go{background:#15803d;border-color:#16a34a;font-weight:600}
+button.danger{background:#7f1d1d;border-color:#b91c1c}
+button.on{background:#1d4ed8;border-color:#3b82f6}
+input[type=text],input[type=number],input[type=password],select{min-height:var(--tap);padding:0 10px;border-radius:8px;border:1px solid var(--line);background:#0c0f12}
+input[type=range]{width:100%;height:var(--tap);accent-color:var(--accent)}
+label{display:flex;align-items:center;gap:8px}
+.topbar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;background:#12161a;border-bottom:1px solid var(--line)}
+.brand{font-weight:700;font-size:17px;margin-right:6px}
+.brand small{color:var(--muted);font-weight:400;font-size:12px;margin-left:4px}
+.spacer{flex:1}
+.chip{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border-radius:999px;background:#252b33;color:var(--muted);font-size:13px}
+.chip.ok{background:#14532d;color:#bbf7d0}.chip.err{background:#7f1d1d;color:#fecaca}.chip.demo{background:#713f12;color:#fde68a}
+#ip{width:170px}#token{width:160px}
+details.adv{position:relative}
+details.adv summary{list-style:none;cursor:pointer;min-height:var(--tap);display:flex;align-items:center;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+details.adv[open] .advbox{position:absolute;top:50px;left:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;display:grid;gap:8px;width:300px;box-shadow:0 10px 30px #000a}
+main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:12px;padding:12px;align-items:start}
+.col{display:grid;gap:12px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;min-width:0}
+.card h2{margin:0 0 10px;font-size:16px;display:flex;align-items:center;gap:8px}
+.card h2 .step{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#000;font-size:13px}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+.toolbar .sep{width:1px;height:28px;background:var(--line);margin:0 4px}
+.stage{position:relative;width:100%;background:#07090b;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}
+.stage canvas{display:block;width:100%;height:100%}
+#stage1{aspect-ratio:16/9}
+#stage2{aspect-ratio:3/2;max-width:900px;margin:0 auto}
+.stage.dragover{outline:3px dashed var(--accent);outline-offset:-6px}
+.hint{color:var(--muted);font-size:13px;margin-top:6px;line-height:1.5}
+.angle{display:flex;align-items:center;gap:8px;flex:1;min-width:220px}
+.angle input{flex:1}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.grid2{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
+.grid2 .k{color:var(--muted);font-size:13px}
+.roi{border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:8px;background:var(--panel2)}
+#roiList{max-height:420px;overflow-y:auto;padding-right:4px}
+.roi.sel{border-color:var(--accent)}
+.roi.bad{border-color:var(--red);background:#2a1414}
+.roi .row{display:flex;gap:6px;align-items:center}
+.roi .row input[type=text]{flex:1;min-width:0}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:13px}
+.checks li{display:flex;gap:6px;align-items:flex-start}
+.checks li::before{content:"✓";color:var(--green);font-weight:700;width:14px;flex:none}
+.checks li.fail{color:#fecaca}.checks li.fail::before{content:"✗";color:var(--red)}
+.checks li.pend{color:var(--muted)}.checks li.pend::before{content:"○";color:var(--muted)}
+.badge{display:inline-block;padding:4px 10px;border-radius:6px;font-weight:700;letter-spacing:.5px}
+.b-PASS,.b-PRESENT{background:#14532d;color:#bbf7d0}
+.b-DEFECT,.b-MISSING{background:#7f1d1d;color:#fecaca}
+.b-CANNOT_INSPECT,.b-UNCERTAIN{background:#713f12;color:#fde68a}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:4px 3px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-weight:500}
+td img{width:48px;height:48px;image-rendering:pixelated;border-radius:4px;display:block}
+.progress{height:8px;border-radius:4px;background:#0c0f12;overflow:hidden;margin:8px 0}
+.progress>div{height:100%;width:0;background:var(--accent);transition:width .15s linear}
+.msg{font-size:13px;line-height:1.5;padding:8px;border-radius:8px;background:var(--panel2);margin-top:8px;white-space:pre-wrap}
+.msg.ok{background:#14532d;color:#dcfce7}.msg.err{background:#7f1d1d;color:#fee2e2}.msg.warn{background:#713f12;color:#fef3c7}
+.row-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000d;color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20;max-width:90vw}
+#toast.show{opacity:1}
+.hidden{display:none!important}
+kbd{font-family:inherit;font-size:12px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:#0c0f12}
+@media (max-width:1100px){main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">ScrewGuard 标定<small>SPEC v3.5</small></div>
+  <label>相机 IP <input id="ip" type="text" placeholder="192.168.42.1" autocomplete="off" spellcheck="false"></label>
+  <button id="btnConnect" class="primary">读取配置</button>
+  <span id="connChip" class="chip">未连接</span>
+  <details class="adv">
+    <summary>⚙ 高级</summary>
+    <div class="advbox">
+      <label>Token <input id="token" type="password" placeholder="可选 Bearer token" autocomplete="off"></label>
+      <label><input id="mockMode" type="checkbox"> 离线演示模式（不连设备）</label>
+      <label>演示下发结果
+        <select id="mockFault">
+          <option value="ok">正常生效</option>
+          <option value="silent">连接成功但静默</option>
+          <option value="mismatch">revision 不符</option>
+          <option value="refused">连接失败</option>
+        </select>
+      </label>
+      <div class="hint">演示模式用内置合成图与模拟 Supervisor，用于培训与离线自检。</div>
+    </div>
+  </details>
+  <div class="spacer"></div>
+  <button id="btnUndo" title="Ctrl+Z">↶ 撤销</button>
+  <button id="btnReset">重置</button>
+  <button id="btnExport">导出 JSON</button>
+  <button id="btnImport">导入 JSON</button>
+  <input id="fileImport" type="file" accept="application/json,.json" class="hidden">
+</header>
+
+<main>
+  <div class="col">
+    <section class="card">
+      <h2><span class="step">1</span>底图与工件框选</h2>
+      <div class="toolbar">
+        <button id="btnSnap" class="primary">📷 抓拍</button>
+        <button id="btnUpload">🖼 上传图片</button>
+        <input id="fileImg" type="file" accept="image/*" class="hidden">
+        <span class="sep"></span>
+        <button id="btnRotL" title="逆时针 90°">⟲90°</button>
+        <button id="btnRotR" title="顺时针 90°">⟳90°</button>
+        <button id="btnFlip" title="翻转 180°（交换正反向）">⇅180°</button>
+        <label title="锁定 3:2 宽高比"><input id="lock32" type="checkbox"> 锁定3:2</label>
+        <div class="angle"><span class="k">角度</span><input id="angle" type="range" min="-180" max="180" step="0.5" value="0"><span id="angleVal" class="mono">0.0°</span></div>
+      </div>
+      <div class="stage" id="stage1"><canvas id="cv1"></canvas></div>
+      <div class="hint">在图上拖拽画出单个工件的框；拖框内移动、拖四角缩放、拖顶部圆点旋转。框的<b style="color:#fbbf24">黄色角</b>是标准视图左上角（原点），箭头为 x 方向。可直接把图片拖入画面。</div>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">2</span>标准视图 <span id="canonDim" class="mono">300×200</span>：锚点与螺孔</h2>
+      <div class="toolbar">
+        <button id="toolSelect" class="on" title="快捷键 1">✋ 选择/拖动</button>
+        <button id="toolAnchor" title="快捷键 2">▭ 方向锚点</button>
+        <button id="toolScrew" title="快捷键 3">◯ 标记螺孔</button>
+        <span class="sep"></span>
+        <button id="btnDelSel" class="danger">🗑 删除所选</button>
+        <span class="hint" style="margin:0"><kbd>1</kbd> 选择 · <kbd>2</kbd> 锚点 · <kbd>3</kbd> 螺孔 · <kbd>Del</kbd> 删除 · <kbd>方向键</kbd> 微移 · 滚轮调半径 · <kbd>Esc</kbd> 取消/完成</span>
+      </div>
+      <div class="stage" id="stage2"><canvas id="cv2"></canvas></div>
+      <div class="hint">锚点：选一块非对称、边缘清晰的结构（180° 位置的虚线框应落在特征不同的区域）。螺孔：点击放置（支持 4 颗及以上，上限 32 颗）；超出画布边界的圆显示为红色且禁止保存。</div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section class="card">
+      <h2>设备状态</h2>
+      <div class="grid2" id="devInfo">
+        <span class="k">连接</span><span id="devConn">—</span>
+        <span class="k">设备配方</span><span id="devProfile" class="mono">—</span>
+        <span class="k">门限 / 最大工件</span><span id="devVals" class="mono">—</span>
+      </div>
+      <div class="row-btns"><button id="btnLoadDev" disabled>载入设备配方到编辑区</button></div>
+    </section>
+
+    <section class="card">
+      <h2>配方参数</h2>
+      <div class="grid2">
+        <span class="k">工件名称</span><input id="pName" type="text" maxlength="32">
+        <span class="k">每批工件数</span><select id="pBlocks"></select>
+        <span class="k">单帧最大工件</span><select id="pMax"></select>
+        <span class="k">每件螺丝数</span><span><b id="pScrews" class="mono">0</b> <span class="k">（自动 = 螺孔数）</span></span>
+        <span class="k">最小工件面积</span><input id="pArea" type="number" min="100" max="200000" step="100">
+        <span class="k">置信度门限</span><span style="display:flex;gap:8px;align-items:center"><input id="pThr" type="range" min="0.5" max="0.95" step="0.05"><b id="pThrVal" class="mono">0.60</b></span>
+      </div>
+      <div class="hint" id="anchorInfo">锚点：未设置</div>
+    </section>
+
+    <section class="card">
+      <h2>螺孔 ROI <span class="chip" id="roiCount">0 / 32</span></h2>
+      <div id="roiList"><div class="hint">在标准视图中选择「◯ 标记螺孔」后点击放置（支持连续添加多孔）。</div></div>
+    </section>
+
+    <section class="card">
+      <h2>保存校验</h2>
+      <ul class="checks" id="checks"></ul>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">3</span>现场试检</h2>
+      <button id="btnTrial" class="primary" style="width:100%">▶ 试检当前底图</button>
+      <div id="trialOut" class="hint">试检用标准合格件（螺丝全部在位）底图，结果为 PASS 后才允许下发。</div>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">4</span>下发到设备</h2>
+      <button id="btnDeploy" class="go" style="width:100%" disabled>⬆ 下发并确认生效</button>
+      <div class="progress hidden" id="depProg"><div></div></div>
+      <div id="depMsg" class="hint">—</div>
+      <div class="row-btns hidden" id="depFailBtns">
+        <button id="btnRetry" class="primary">重新提交</button>
+        <button id="btnRollback" class="danger">回退配置</button>
+      </div>
+    </section>
+  </div>
+</main>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ===================== 常量（SPEC 依据） ===================== */
+const APP_ID = 'screw-guard';
+let W = 300, H = 200;                      // §3.1 标准画布（自适应工件框长宽比，默认 300×200）
+const PATCH = 48, ORIG_W = 1920;           // §3.1 原图 48×48 Patch（按 1920 宽基准缩放）
+const MISSING_BELOW = 0.35;                // §4.1
+const MAX_ROIS = 32;                       // 支持 4 颗以上，上限 32 颗
+const PROFILE_MAX_BYTES = 4096;            // §2.1 maxLength
+const POLL_MS = 200, APPLY_TIMEOUT_MS = 6000; // §2.2
+const WS_CONNECT_STALL_MS = 1000;          // 单次连接卡在 CONNECTING 超过此值则重建
+const HTTP_TIMEOUT_MS = 4000;
+// §2.2 ③：收到 revision 不符的报文时是否立即熔断。false = 继续等待到 6s 截止（旧进程退出前的残留帧不误判）
+const FAIL_FAST_ON_REV_MISMATCH = false;
+const RESULT_REQUIRED = ['schema_version','device_id','app_version','applied_revision','cycle_id','frame_id','timestamp','overall_status','overall_reason','summary','blocks'];
+const DEFAULT_VALUES = {
+  profile_json: '{"revision":1,"part_name":"leg_joint","expected_blocks":2,"expected_screws_per_block":2,"canonical_size":[300,200],"min_block_area":4000,"anchor":{"norm_x":0.15,"norm_y":0.5,"norm_w":0.15,"norm_h":0.25,"ref_edge_mean":32.5},"screw_rois":[{"id":1,"name":"侧面M2","norm_x":0.283,"norm_y":0.700,"norm_r":0.080},{"id":2,"name":"关节M2","norm_x":0.600,"norm_y":0.450,"norm_r":0.080}]}',
+  confidence_threshold: 0.60,
+  max_blocks: 4,
+};
+const DEFAULT_PARAMS = {part_name:'leg_joint', expected_blocks:2, max_blocks:4, min_block_area:4000, confidence_threshold:0.60};
+
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const r4 = v => Math.round(v*1e4)/1e4;
+const deg2rad = d => d*Math.PI/180;
+const dpr = () => window.devicePixelRatio || 1;
+
+/* ===================== 状态 ===================== */
+const S = {
+  rect: null,     // 原图坐标旋转矩形 {cx,cy,w,h,angle(deg)}
+  anchor: null,   // {norm_x,norm_y,norm_w,norm_h}（中心 + 宽高，归一化）
+  rois: [],       // [{id,name,norm_x,norm_y,norm_r}]
+  params: {...DEFAULT_PARAMS},
+};
+const device = {connected:false, values:null, profile:null, maxRevSeen:0};
+let src = null;            // 原图 canvas
+let srcGray = null;
+const canon = document.createElement('canvas'); canon.width = W; canon.height = H;
+const canonCtx = canon.getContext('2d', {willReadFrequently:true});
+let canonGray = null;      // Uint8Array W*H
+let canonValid = false;
+let canonSizeError = null;
+let refEdge = null;        // 锚点 ref_edge_mean（0° 位置）
+let trial = null;          // 最近一次试检结果；任何编辑后置 null
+let sel = null;            // {type:'roi',idx} | {type:'anchor'}
+let tool = 'select';
+let deploying = false;
+let lastDeploy = null;     // {rollbackValues, rollbackRev}
+
+/* ===================== 撤销栈 ===================== */
+const undoStack = [];
+const snap = () => JSON.stringify({rect:S.rect, anchor:S.anchor, rois:S.rois, params:S.params, canonSize:[W,H]});
+let committed = snap();
+function commit(){
+  normalizeRois();
+  const now = snap();
+  if (now === committed) { refreshAll(); return; }
+  undoStack.push(committed);
+  if (undoStack.length > 200) undoStack.shift();
+  committed = now;
+  trial = null;
+  refreshAll();
+}
+function restore(json){
+  const o = JSON.parse(json);
+  if (Array.isArray(o.canonSize) && o.canonSize.length === 2) setCanonSize(o.canonSize[0], o.canonSize[1]);
+  S.rect = o.rect; S.anchor = o.anchor; S.rois = o.rois; S.params = o.params;
+  sel = null; trial = null; roiSig = '';
+  rebuildCanon(true);
+}
+function undo(){
+  if (!undoStack.length) return toast('没有可撤销的操作');
+  const prev = undoStack.pop();
+  restore(prev); committed = prev;
+  refreshAll(); toast('已撤销');
+}
+function normalizeRois(){ S.rois.forEach((r,i)=>{ r.id = i+1; }); }
+
+/* ===================== 图像算法（复刻 §4.1） ===================== */
+function toGray(imgData){
+  const d = imgData.data, n = d.length>>2, g = new Uint8Array(n);
+  for (let i=0,j=0;i<n;i++,j+=4) g[i] = Math.round(0.299*d[j] + 0.587*d[j+1] + 0.114*d[j+2]);
+  return g;
+}
+const rf101 = (i,n) => n===1 ? 0 : (i<0 ? -i : (i>=n ? 2*n-2-i : i)); // BORDER_REFLECT_101
+const rint = x => { const f = Math.floor(x), d = x - f; return d > 0.5 ? f+1 : d < 0.5 ? f : (f%2===0 ? f : f+1); }; // cvRound 半偶
+// 子区域 (x0,y0,w,h) 上的 Sobel 绝对加权梯度均值；子区域边界按 REFLECT_101 隔离处理
+function edgeMean(g, gw, x0, y0, w, h){
+  if (w < 1 || h < 1) return NaN;
+  let sum = 0;
+  const P = (x,y) => g[(y0 + rf101(y,h))*gw + x0 + rf101(x,w)];
+  for (let y=0;y<h;y++) for (let x=0;x<w;x++){
+    const a=P(x-1,y-1), b=P(x,y-1), c=P(x+1,y-1), d=P(x-1,y), f=P(x+1,y), gg=P(x-1,y+1), hh=P(x,y+1), ii=P(x+1,y+1);
+    const gx = (c + 2*f + ii) - (a + 2*d + gg);
+    const gy = (gg + 2*hh + ii) - (a + 2*b + c);
+    const ax = Math.min(255, Math.abs(gx)), ay = Math.min(255, Math.abs(gy));
+    sum += Math.min(255, rint(0.5*ax + 0.5*ay));
+  }
+  return sum/(w*h);
+}
+function brightRatio(g){ let c=0; for (let i=0;i<g.length;i++) if (g[i] > 165) c++; return c/g.length; }
+const roundAway = v => v >= 0 ? Math.round(v) : -Math.round(-v);
+const screwScore = (e,b) => {
+  const raw = 0.55*Math.min(1, e/28.0) + 0.45*Math.min(1, b/0.08);
+  return Math.round(raw * 100) / 100;
+};
+function screwStatus(score, thr){
+  if (!Number.isFinite(score)) return 'CANNOT_INSPECT';
+  if (score >= thr) return 'PRESENT';
+  if (score < MISSING_BELOW) return 'MISSING';
+  return 'UNCERTAIN';
+}
+// §4.2 优先级裁决
+function aggregateBlock(statuses){
+  if (statuses.includes('MISSING')) return {status:'DEFECT', reason:'MISSING_SCREW'};
+  if (statuses.includes('CANNOT_INSPECT')) return {status:'CANNOT_INSPECT', reason:'CANNOT_INSPECT_ROI_OOB'};
+  if (statuses.includes('UNCERTAIN')) return {status:'CANNOT_INSPECT', reason:'CANNOT_INSPECT_LOW_CONFIDENCE'};
+  return {status:'PASS', reason:'OK'};
+}
+
+/* ===================== 几何（§3.1） ===================== */
+function roiPx(r){
+  return { x: roundAway(r.norm_x*(W-1)), y: roundAway(r.norm_y*(H-1)), r: roundAway(r.norm_r*Math.min(W,H)) };
+}
+function roiInBounds(r){
+  const p = roiPx(r);
+  return p.r > 0 && p.x - p.r >= 0 && p.x + p.r < W && p.y - p.r >= 0 && p.y + p.r < H;
+}
+// 锚点（与 C++ 端约定一致）：norm_x/norm_y 为中心，norm_w/norm_h 为相对宽高
+//   wa = roundAway(norm_w*W), ha = roundAway(norm_h*H)
+//   xa = roundAway(norm_x*(W-1) - wa/2), ya = roundAway(norm_y*(H-1) - ha/2)
+// anchorFromPx 为其逆变换，后续修改需两处同步
+function anchorPx(a){
+  const w = roundAway(a.norm_w*W), h = roundAway(a.norm_h*H);
+  return { x: roundAway(a.norm_x*(W-1) - w/2), y: roundAway(a.norm_y*(H-1) - h/2), w, h };
+}
+function anchorFromPx(x,y,w,h){
+  return { norm_x: r4(clamp((x + w/2)/(W-1),0,1)), norm_y: r4(clamp((y + h/2)/(H-1),0,1)), norm_w: r4(w/W), norm_h: r4(h/H) };
+}
+function anchorInBounds(a){
+  const p = anchorPx(a);
+  return p.w >= 4 && p.h >= 4 && p.x >= 0 && p.y >= 0 && p.x + p.w <= W && p.y + p.h <= H;
+}
+function canonToSrc(u, v, rect = S.rect){
+  const a = deg2rad(rect.angle), lx = (u - W/2)*rect.w/W, ly = (v - H/2)*rect.h/H;
+  return { x: rect.cx + lx*Math.cos(a) - ly*Math.sin(a), y: rect.cy + lx*Math.sin(a) + ly*Math.cos(a) };
+}
+function rectCorners(rect){
+  const a = deg2rad(rect.angle), c = Math.cos(a), s = Math.sin(a);
+  return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([sx,sy]) => {
+    const lx = sx*rect.w/2, ly = sy*rect.h/2;
+    return { x: rect.cx + lx*c - ly*s, y: rect.cy + lx*s + ly*c };
+  });
+}
+const toLocal = (p, rect) => { const a = deg2rad(rect.angle), dx = p.x-rect.cx, dy = p.y-rect.cy; return { x: dx*Math.cos(a)+dy*Math.sin(a), y: -dx*Math.sin(a)+dy*Math.cos(a) }; };
+const normAngle = a => { a = ((a + 180) % 360 + 360) % 360 - 180; return a === -180 ? 180 : a; };
+
+/* ===================== 正交化 & 锚点特征 ===================== */
+function setCanonSize(newW, newH){
+  if (!Number.isInteger(newW) || !Number.isInteger(newH) || newW < 30 || newW > 1280 || newH < 30 || newH > 1280){
+    canonSizeError = `标准尺寸必须是 30~1280 的整数（收到 ${newW}×${newH}）`;
+    toast(canonSizeError);
+    refreshChecks();
+    return false;
+  }
+  canonSizeError = null;
+  if (W === newW && H === newH && canon.width === W && canon.height === H) return;
+  W = newW;
+  H = newH;
+  canon.width = W;
+  canon.height = H;
+  const s2 = $('stage2');
+  if (s2){
+    s2.style.aspectRatio = `${W} / ${H}`;
+    const bw = s2.clientWidth;
+    if (bw > 0){
+      const bh = Math.round(bw * H / W);
+      const d = dpr();
+      cv2.width = Math.max(1, Math.round(bw * d));
+      cv2.height = Math.max(1, Math.round(bh * d));
+    }
+  }
+  const dim = $('canonDim');
+  if (dim) dim.textContent = `${W}×${H}`;
+  return true;
+}
+
+function updateCanonSizeFromRect(){
+  if (!S.rect || !(S.rect.w >= 20) || !(S.rect.h >= 20)) return;
+  const rw = S.rect.w, rh = S.rect.h;
+  const long = Math.max(rw, rh), short = Math.min(rw, rh);
+  if (long / short > 1280 / 30){
+    canonSizeError = `工件长宽比 ${(long / short).toFixed(2)} 超出支持范围（最大 1280:30），已禁止导出`;
+    toast(canonSizeError);
+    refreshChecks();
+    return false;
+  }
+  const scale = short * 300 / long < 30 ? 30 / short : 300 / long;
+  const nw = Math.round(rw * scale), nh = Math.round(rh * scale);
+  if (nw < 30 || nh < 30 || nw > 1280 || nh > 1280){
+    canonSizeError = `工件比例换算得到非法标准尺寸 ${nw}×${nh}，已禁止导出`;
+    toast(canonSizeError);
+    refreshChecks();
+    return false;
+  }
+  return setCanonSize(nw, nh);
+}
+
+function rebuildCanon(fromProfileSize = false){
+  canonValid = !!(src && S.rect && S.rect.w >= 20 && S.rect.h >= 20);
+  if (!canonValid){ canonGray = null; refEdge = null; return; }
+  if (!fromProfileSize) updateCanonSizeFromRect();
+  if (canon.width !== W || canon.height !== H){
+    canon.width = W; canon.height = H;
+  }
+  const r = S.rect;
+  canonCtx.setTransform(1,0,0,1,0,0);
+  canonCtx.fillStyle = '#000'; canonCtx.fillRect(0,0,W,H);
+  canonCtx.imageSmoothingEnabled = true; canonCtx.imageSmoothingQuality = 'high';
+  canonCtx.translate(W/2, H/2);
+  canonCtx.scale(W/r.w, H/r.h);
+  canonCtx.rotate(-deg2rad(r.angle));
+  canonCtx.translate(-r.cx, -r.cy);
+  canonCtx.drawImage(src, 0, 0);
+  canonCtx.setTransform(1,0,0,1,0,0);
+  canonGray = toGray(canonCtx.getImageData(0,0,W,H));
+  updateRefEdge();
+}
+function updateRefEdge(){
+  refEdge = null;
+  if (!canonGray || !S.anchor || !anchorInBounds(S.anchor)) return;
+  const p = anchorPx(S.anchor);
+  refEdge = edgeMean(canonGray, W, p.x, p.y, p.w, p.h);
+}
+function anchorEdge180(){
+  if (!canonGray || !S.anchor || !anchorInBounds(S.anchor)) return NaN;
+  const p = anchorPx(S.anchor);
+  return edgeMean(canonGray, W, W - p.x - p.w, H - p.y - p.h, p.w, p.h);
+}
+
+/* ===================== 配方构建 / 校验 ===================== */
+function buildProfile(revision){
+  const a = S.anchor;
+  return {
+    revision,
+    part_name: S.params.part_name,
+    expected_blocks: S.params.expected_blocks,
+    expected_screws_per_block: S.rois.length,     // §4.3 强制联动
+    canonical_size: [W, H],
+    min_block_area: S.params.min_block_area,
+    anchor: a ? { norm_x:a.norm_x, norm_y:a.norm_y, norm_w:a.norm_w, norm_h:a.norm_h, ref_edge_mean: Number.isFinite(refEdge) ? Math.round(refEdge*10)/10 : null } : null,
+    screw_rois: S.rois.map((r,i) => ({ id:i+1, name:r.name, norm_x:r4(r.norm_x), norm_y:r4(r.norm_y), norm_r:r4(r.norm_r) })),
+  };
+}
+const utf8Len = s => new TextEncoder().encode(s).length;
+function validate(){
+  const P = S.params, out = [];
+  const add = (ok, text, scope='save') => out.push({ok, text, scope});
+  add(!!src, '已加载底图');
+  add(!!S.rect, '已框选工件');
+  add(!canonSizeError, canonSizeError || `标准尺寸 ${W}×${H} 为 30~1280 整数`);
+  add(!!S.anchor, '已标记方向锚点');
+  if (S.anchor){
+    add(anchorInBounds(S.anchor), `锚点完整位于 ${W}×${H} 画布内（≥4px）`);
+    add(Number.isFinite(refEdge) && refEdge > 0, `锚点 ref_edge_mean 有效${Number.isFinite(refEdge) ? `（${refEdge.toFixed(1)}）` : ''}`);
+  }
+  add(S.rois.length >= 1 && S.rois.length <= MAX_ROIS, `螺孔数 1~${MAX_ROIS}（当前 ${S.rois.length}）`);
+  S.rois.forEach((r,i) => {
+    const p = roiPx(r);
+    add(roiInBounds(r), `螺孔${i+1} 边界：x−r≥0 ∧ x+r<${W} ∧ y−r≥0 ∧ y+r<${H}（x=${p.x} y=${p.y} r=${p.r}）`);
+    add(!!r.name.trim(), `螺孔${i+1} 已命名`);
+  });
+  add(S.rois.length === buildProfile(0).expected_screws_per_block, `expected_screws_per_block == screw_rois.length（${S.rois.length}）`);
+  add(Number.isInteger(P.expected_blocks) && P.expected_blocks >= 1 && P.expected_blocks <= P.max_blocks && P.max_blocks <= 4,
+      `1 ≤ 每批工件数(${P.expected_blocks}) ≤ 单帧最大(${P.max_blocks}) ≤ 4`);
+  add(P.confidence_threshold >= 0.5 && P.confidence_threshold <= 0.95, '0.50 ≤ 置信度门限 ≤ 0.95');
+  add(!!P.part_name.trim(), '工件名称非空');
+  add(Number.isFinite(P.min_block_area) && P.min_block_area > 0, '最小工件面积 > 0');
+  const bytes = utf8Len(JSON.stringify(buildProfile(device.maxRevSeen + 1)));
+  add(bytes <= PROFILE_MAX_BYTES, `profile_json ${bytes} / ${PROFILE_MAX_BYTES} 字节`);
+  // 下发门控
+  add(device.connected, '已连接设备并读取配置', 'deploy');
+  add(!!trial, '已对当前配方执行试检', 'deploy');
+  if (trial) add(trial.block.status === 'PASS', `试检结果为 PASS（当前 ${trial.block.status}）`, 'deploy');
+  return out;
+}
+const saveOk = v => v.filter(c => c.scope === 'save').every(c => c.ok);
+const deployOk = v => v.every(c => c.ok);
+
+/* ===================== 画布 1：底图 + 工件框 ===================== */
+const cv1 = $('cv1'), ctx1 = cv1.getContext('2d');
+let view1 = {f:1, ox:0, oy:0};
+let drag1 = null;
+function layout1(){
+  if (!src) return;
+  const f = Math.min(cv1.width/src.width, cv1.height/src.height);
+  view1 = { f, ox:(cv1.width - src.width*f)/2, oy:(cv1.height - src.height*f)/2 };
+}
+const img2scr1 = p => ({ x: view1.ox + p.x*view1.f, y: view1.oy + p.y*view1.f });
+function evt2img1(e){
+  const b = cv1.getBoundingClientRect(), k = cv1.width/b.width;
+  return { x: ((e.clientX-b.left)*k - view1.ox)/view1.f, y: ((e.clientY-b.top)*k - view1.oy)/view1.f };
+}
+function rotHandle(rect){
+  const a = deg2rad(rect.angle), off = rect.h/2 + 34*dpr()/view1.f;
+  return { x: rect.cx + off*Math.sin(a), y: rect.cy - off*Math.cos(a) };
+}
+function draw1(){
+  const c = ctx1, d = dpr();
+  c.setTransform(1,0,0,1,0,0);
+  c.fillStyle = '#07090b'; c.fillRect(0,0,cv1.width,cv1.height);
+  if (!src){
+    c.fillStyle = '#5b6672'; c.font = `${16*d}px sans-serif`; c.textAlign = 'center';
+    c.fillText('点击「📷 抓拍」或「🖼 上传图片」，也可把图片拖到这里', cv1.width/2, cv1.height/2);
+    return;
+  }
+  layout1();
+  c.imageSmoothingEnabled = true;
+  c.drawImage(src, view1.ox, view1.oy, src.width*view1.f, src.height*view1.f);
+  if (!S.rect) return;
+  const pts = rectCorners(S.rect).map(img2scr1);
+  c.lineWidth = 2*d; c.strokeStyle = '#38bdf8'; c.fillStyle = 'rgba(56,189,248,.08)';
+  c.beginPath(); pts.forEach((p,i) => i ? c.lineTo(p.x,p.y) : c.moveTo(p.x,p.y)); c.closePath(); c.fill(); c.stroke();
+  // 旋转手柄
+  const top = img2scr1(canonToSrc(W/2, 0)), rh = img2scr1(rotHandle(S.rect));
+  c.beginPath(); c.moveTo(top.x, top.y); c.lineTo(rh.x, rh.y); c.stroke();
+  c.beginPath(); c.arc(rh.x, rh.y, 9*d, 0, Math.PI*2); c.fillStyle = '#38bdf8'; c.fill();
+  // 四角
+  pts.forEach((p,i) => { c.fillStyle = i === 0 ? '#fbbf24' : '#e6eaee'; c.fillRect(p.x-7*d, p.y-7*d, 14*d, 14*d); });
+  // x 方向箭头
+  const o = img2scr1(canonToSrc(W*0.08, H*0.12)), ax = img2scr1(canonToSrc(W*0.28, H*0.12));
+  c.strokeStyle = '#fbbf24'; c.lineWidth = 2*d;
+  c.beginPath(); c.moveTo(o.x,o.y); c.lineTo(ax.x,ax.y); c.stroke();
+  const ang = Math.atan2(ax.y-o.y, ax.x-o.x);
+  c.beginPath(); c.moveTo(ax.x,ax.y); c.lineTo(ax.x-10*d*Math.cos(ang-0.4), ax.y-10*d*Math.sin(ang-0.4)); c.lineTo(ax.x-10*d*Math.cos(ang+0.4), ax.y-10*d*Math.sin(ang+0.4)); c.closePath(); c.fillStyle='#fbbf24'; c.fill();
+  // 螺孔中心与原图 48×48 Patch 投影
+  const ps = PATCH*src.width/ORIG_W;
+  S.rois.forEach((r,i) => {
+    const p = roiPx(r), q = canonToSrc(p.x, p.y), sq = img2scr1(q), half = ps/2*view1.f;
+    c.strokeStyle = roiInBounds(r) ? '#22c55e' : '#ef4444'; c.lineWidth = 1.5*d;
+    c.strokeRect(sq.x-half, sq.y-half, half*2, half*2);
+    c.fillStyle = c.strokeStyle; c.font = `${12*d}px sans-serif`; c.textAlign = 'left';
+    c.fillText(String(i+1), sq.x+half+3*d, sq.y-half+10*d);
+  });
+}
+cv1.addEventListener('pointerdown', e => {
+  if (!src) return $('fileImg').click();
+  cv1.setPointerCapture(e.pointerId);
+  const p = evt2img1(e), tol = 22*dpr()/view1.f;
+  const orig = S.rect ? {...S.rect} : null;
+  if (S.rect){
+    const rh = rotHandle(S.rect);
+    if (Math.hypot(p.x-rh.x, p.y-rh.y) < tol){ drag1 = {mode:'rotate', orig}; return; }
+    const cs = rectCorners(S.rect);
+    for (let i=0;i<4;i++) if (Math.hypot(p.x-cs[i].x, p.y-cs[i].y) < tol){ drag1 = {mode:'corner', idx:i, orig}; return; }
+    const l = toLocal(p, S.rect);
+    if (Math.abs(l.x) <= S.rect.w/2 && Math.abs(l.y) <= S.rect.h/2){ drag1 = {mode:'move', start:p, orig}; return; }
+  }
+  drag1 = {mode:'new', start:p, orig};
+});
+cv1.addEventListener('pointermove', e => {
+  if (!drag1) return;
+  const p = evt2img1(e), o = drag1.orig, lock = $('lock32').checked;
+  if (drag1.mode === 'move'){
+    S.rect = {...o, cx: o.cx + p.x - drag1.start.x, cy: o.cy + p.y - drag1.start.y};
+  } else if (drag1.mode === 'rotate'){
+    const a = Math.atan2(p.y - o.cy, p.x - o.cx)*180/Math.PI + 90;
+    S.rect = {...o, angle: normAngle(Math.round(a*2)/2)};
+  } else if (drag1.mode === 'corner'){
+    const sgn = [[-1,-1],[1,-1],[1,1],[-1,1]][(drag1.idx+2)%4];
+    const opp = {x: sgn[0]*o.w/2, y: sgn[1]*o.h/2};
+    const lp = toLocal(p, o);
+    const sx = Math.sign(lp.x - opp.x) || 1, sy = Math.sign(lp.y - opp.y) || 1;
+    let w = Math.max(20, Math.abs(lp.x - opp.x)), h = Math.max(20, Math.abs(lp.y - opp.y));
+    if (lock) h = Math.round(w * 2 / 3);
+    const m = {x: opp.x + sx*w/2, y: opp.y + sy*h/2}, a = deg2rad(o.angle);
+    S.rect = {...o, w, h, cx: o.cx + m.x*Math.cos(a) - m.y*Math.sin(a), cy: o.cy + m.x*Math.sin(a) + m.y*Math.cos(a)};
+  } else {
+    const s = drag1.start, dx = p.x - s.x, dy = p.y - s.y;
+    let w = Math.max(1, Math.abs(dx)), h = Math.max(1, Math.abs(dy));
+    if (lock) h = Math.round(w * 2 / 3);
+    S.rect = {cx: s.x + Math.sign(dx||1)*w/2, cy: s.y + Math.sign(dy||1)*h/2, w, h, angle:0};
+  }
+  rebuildCanon(); requestDraw();
+});
+const end1 = () => {
+  if (!drag1) return;
+  if (drag1.mode === 'new' && (!S.rect || S.rect.w < 20 || S.rect.h < 20)){ S.rect = drag1.orig; rebuildCanon(); }
+  drag1 = null; commit();
+};
+cv1.addEventListener('pointerup', end1); cv1.addEventListener('pointercancel', end1);
+
+function rotateRect(delta){
+  if (!S.rect) return toast('请先框选工件');
+  S.rect = {...S.rect, angle: normAngle(S.rect.angle + delta)};
+  rebuildCanon(); commit();
+}
+$('btnRotL').onclick = () => rotateRect(-90);
+$('btnRotR').onclick = () => rotateRect(90);
+$('btnFlip').onclick = () => rotateRect(180);
+$('lock32').addEventListener('change', () => {
+  if ($('lock32').checked && S.rect){
+    S.rect.h = Math.round(S.rect.w * 2 / 3);
+    rebuildCanon(); requestDraw(); commit();
+  }
+});
+$('angle').addEventListener('input', e => {
+  if (!S.rect) return;
+  S.rect = {...S.rect, angle: Number(e.target.value)};
+  rebuildCanon(); requestDraw(); $('angleVal').textContent = S.rect.angle.toFixed(1)+'°';
+});
+$('angle').addEventListener('change', () => commit());
+
+/* ===================== 画布 2：标准视图 ===================== */
+const cv2 = $('cv2'), ctx2 = cv2.getContext('2d');
+let drag2 = null, wheelTimer = null;
+const k2 = () => cv2.width / W;
+function evt2canon(e){
+  const b = cv2.getBoundingClientRect();
+  return { x: (e.clientX - b.left)/b.width*W, y: (e.clientY - b.top)/b.height*H };
+}
+function setTool(t){
+  tool = t;
+  ['Select','Anchor','Screw'].forEach(n => $('tool'+n).classList.toggle('on', t === n.toLowerCase()));
+  cv2.style.cursor = t === 'select' ? 'default' : 'crosshair';
+}
+$('toolSelect').onclick = () => setTool('select');
+$('toolAnchor').onclick = () => setTool('anchor');
+$('toolScrew').onclick = () => setTool('screw');
+
+const STATUS_COLOR = {PRESENT:'#22c55e', MISSING:'#ef4444', UNCERTAIN:'#f59e0b', CANNOT_INSPECT:'#f59e0b'};
+function draw2(){
+  const c = ctx2, k = k2(), d = dpr();
+  c.setTransform(1,0,0,1,0,0);
+  c.fillStyle = '#07090b'; c.fillRect(0,0,cv2.width,cv2.height);
+  if (!canonValid){
+    c.fillStyle = '#5b6672'; c.font = `${15*d}px sans-serif`; c.textAlign = 'center';
+    c.fillText('先在上方画布框选一个工件', cv2.width/2, cv2.height/2);
+  } else {
+    c.imageSmoothingEnabled = true;
+    c.drawImage(canon, 0, 0, cv2.width, cv2.height);
+  }
+  // 10% 网格
+  c.strokeStyle = 'rgba(255,255,255,.07)'; c.lineWidth = 1;
+  for (let i=1;i<10;i++){ c.beginPath(); c.moveTo(i*W/10*k,0); c.lineTo(i*W/10*k,cv2.height); c.stroke(); c.beginPath(); c.moveTo(0,i*H/10*k); c.lineTo(cv2.width,i*H/10*k); c.stroke(); }
+  c.font = `${12*d}px sans-serif`; c.textAlign = 'left';
+  // 锚点 + 180° 对照位
+  if (S.anchor){
+    const p = anchorPx(S.anchor), ok = anchorInBounds(S.anchor), isSel = sel?.type === 'anchor';
+    c.setLineDash([6*d,4*d]); c.strokeStyle = 'rgba(148,163,184,.8)'; c.lineWidth = 1.5*d;
+    c.strokeRect((W-p.x-p.w)*k, (H-p.y-p.h)*k, p.w*k, p.h*k);
+    c.fillStyle = 'rgba(148,163,184,.9)'; c.fillText('180°对照', (W-p.x-p.w)*k+3*d, (H-p.y-p.h)*k-4*d);
+    c.setLineDash([]);
+    c.fillStyle = ok ? 'rgba(59,130,246,.18)' : 'rgba(239,68,68,.3)';
+    c.strokeStyle = ok ? '#3b82f6' : '#ef4444'; c.lineWidth = (isSel ? 3 : 2)*d;
+    c.fillRect(p.x*k, p.y*k, p.w*k, p.h*k); c.strokeRect(p.x*k, p.y*k, p.w*k, p.h*k);
+    c.fillStyle = ok ? '#93c5fd' : '#fca5a5';
+    c.fillText(ok ? `锚点 ref=${Number.isFinite(refEdge) ? refEdge.toFixed(1) : '—'}` : '锚点越界', p.x*k+3*d, p.y*k-4*d);
+    if (isSel) [[p.x,p.y],[p.x+p.w,p.y],[p.x+p.w,p.y+p.h],[p.x,p.y+p.h]].forEach(([x,y]) => { c.fillStyle = '#e6eaee'; c.fillRect(x*k-6*d, y*k-6*d, 12*d, 12*d); });
+  }
+  // 螺孔
+  S.rois.forEach((r,i) => {
+    const p = roiPx(r), ok = roiInBounds(r), isSel = sel?.type === 'roi' && sel.idx === i;
+    const tr = trial?.screws[i];
+    const col = !ok ? '#ef4444' : (tr ? STATUS_COLOR[tr.status] : '#22c55e');
+    c.beginPath(); c.arc(p.x*k, p.y*k, Math.max(1,p.r)*k, 0, Math.PI*2);
+    c.fillStyle = col + '4d'; c.fill();
+    c.lineWidth = (isSel ? 3 : 2)*d; c.strokeStyle = col; c.stroke();
+    if (isSel){ c.beginPath(); c.arc(p.x*k, p.y*k, Math.max(1,p.r)*k + 5*d, 0, Math.PI*2); c.strokeStyle = '#fff'; c.lineWidth = 1.5*d; c.setLineDash([4*d,4*d]); c.stroke(); c.setLineDash([]); }
+    c.beginPath(); c.moveTo(p.x*k-5*d, p.y*k); c.lineTo(p.x*k+5*d, p.y*k); c.moveTo(p.x*k, p.y*k-5*d); c.lineTo(p.x*k, p.y*k+5*d); c.strokeStyle = '#fff'; c.lineWidth = 1*d; c.stroke();
+    let label = `${i+1} ${r.name}`;
+    if (!ok) label += ' · 越界';
+    else if (tr) label += ` · ${tr.status} ${tr.score.toFixed(2)}`;
+    c.fillStyle = col; c.fillText(label, (p.x + p.r)*k + 4*d, (p.y - p.r)*k + 12*d);
+  });
+}
+function hitRoi(p){
+  const tol = 10*dpr()/k2();
+  for (let i=S.rois.length-1;i>=0;i--){ const q = roiPx(S.rois[i]); if (Math.hypot(p.x-q.x, p.y-q.y) <= Math.max(q.r, 4) + tol) return i; }
+  return -1;
+}
+function hitAnchorCorner(p){
+  if (!S.anchor) return -1;
+  const a = anchorPx(S.anchor), tol = 12*dpr()/k2();
+  const cs = [[a.x,a.y],[a.x+a.w,a.y],[a.x+a.w,a.y+a.h],[a.x,a.y+a.h]];
+  return cs.findIndex(([x,y]) => Math.abs(p.x-x) < tol && Math.abs(p.y-y) < tol);
+}
+function hitAnchor(p){ if (!S.anchor) return false; const a = anchorPx(S.anchor); return p.x >= a.x && p.x <= a.x+a.w && p.y >= a.y && p.y <= a.y+a.h; }
+
+cv2.addEventListener('pointerdown', e => {
+  if (!canonValid) return toast('请先在画布 1 框选工件');
+  cv2.setPointerCapture(e.pointerId);
+  const p = evt2canon(e);
+  if (tool === 'anchor'){ drag2 = {mode:'anchorNew', start:p, orig:S.anchor}; return; }
+  if (tool === 'screw'){
+    if (S.rois.length >= MAX_ROIS){ toast(`已达上限 ${MAX_ROIS} 个螺孔`); setTool('select'); return; }
+    const newId = S.rois.length + 1;
+    S.rois.push({ id: newId, name: `螺孔${newId}`, norm_x: r4(clamp(p.x/(W-1),0,1)), norm_y: r4(clamp(p.y/(H-1),0,1)), norm_r: 0.08 });
+    sel = {type:'roi', idx: S.rois.length - 1};
+    drag2 = {mode:'roiMove', idx: sel.idx, start: p, orig: {...S.rois[sel.idx]}};
+    refreshAll(); return;
+  }
+  if (sel?.type === 'anchor'){
+    const ci = hitAnchorCorner(p);
+    if (ci >= 0){ drag2 = {mode:'anchorCorner', idx:ci, orig:anchorPx(S.anchor)}; return; }
+  }
+  const ri = hitRoi(p);
+  if (ri >= 0){ sel = {type:'roi', idx:ri}; drag2 = {mode:'roiMove', idx:ri, start:p, orig:{...S.rois[ri]}}; refreshAll(); return; }
+  const ci = hitAnchorCorner(p);
+  if (ci >= 0){ sel = {type:'anchor'}; drag2 = {mode:'anchorCorner', idx:ci, orig:anchorPx(S.anchor)}; refreshAll(); return; }
+  if (hitAnchor(p)){ sel = {type:'anchor'}; drag2 = {mode:'anchorMove', start:p, orig:anchorPx(S.anchor)}; refreshAll(); return; }
+  sel = null; refreshAll();
+});
+cv2.addEventListener('pointermove', e => {
+  if (!drag2) return;
+  const p = evt2canon(e), cp = {x: clamp(p.x,0,W), y: clamp(p.y,0,H)};
+  if (drag2.mode === 'roiMove'){
+    const o = drag2.orig, ox = o.norm_x*(W-1) + p.x - drag2.start.x, oy = o.norm_y*(H-1) + p.y - drag2.start.y;
+    Object.assign(S.rois[drag2.idx], { norm_x: r4(clamp(ox/(W-1),0,1)), norm_y: r4(clamp(oy/(H-1),0,1)) });
+  } else if (drag2.mode === 'anchorNew'){
+    const s = drag2.start, x = Math.min(s.x, cp.x), y = Math.min(s.y, cp.y);
+    S.anchor = anchorFromPx(x, y, Math.abs(cp.x - s.x), Math.abs(cp.y - s.y));
+  } else if (drag2.mode === 'anchorMove'){
+    const o = drag2.orig;
+    S.anchor = anchorFromPx(o.x + p.x - drag2.start.x, o.y + p.y - drag2.start.y, o.w, o.h);
+  } else if (drag2.mode === 'anchorCorner'){
+    const o = drag2.orig, cs = [[o.x,o.y],[o.x+o.w,o.y],[o.x+o.w,o.y+o.h],[o.x,o.y+o.h]];
+    const [fx, fy] = cs[(drag2.idx+2)%4];
+    S.anchor = anchorFromPx(Math.min(fx,cp.x), Math.min(fy,cp.y), Math.abs(cp.x-fx), Math.abs(cp.y-fy));
+  }
+  updateRefEdge(); requestDraw(); refreshRoiValues();
+});
+const end2 = () => {
+  if (!drag2) return;
+  if (drag2.mode === 'anchorNew'){
+    const p = S.anchor && anchorPx(S.anchor);
+    if (!p || p.w < 4 || p.h < 4){ S.anchor = drag2.orig; toast('锚点太小，已取消'); }
+    else { sel = {type:'anchor'}; setTool('select'); }
+    updateRefEdge();
+  }
+  drag2 = null; commit();
+};
+cv2.addEventListener('pointerup', end2); cv2.addEventListener('pointercancel', end2);
+cv2.addEventListener('wheel', e => {
+  if (sel?.type !== 'roi') return;
+  e.preventDefault();
+  const r = S.rois[sel.idx];
+  r.norm_r = r4(clamp(r.norm_r + (e.deltaY < 0 ? 0.005 : -0.005), 0.01, 0.5));
+  requestDraw(); refreshRoiValues();
+  clearTimeout(wheelTimer); wheelTimer = setTimeout(commit, 350);
+}, {passive:false});
+
+function deleteSelected(){
+  if (!sel) return toast('先选中一个螺孔或锚点');
+  if (sel.type === 'roi') S.rois.splice(sel.idx, 1); else S.anchor = null;
+  sel = null; updateRefEdge(); commit(); toast('已删除，可撤销');
+}
+$('btnDelSel').onclick = deleteSelected;
+
+/* ===================== 面板 ===================== */
+for (const id of ['pBlocks','pMax']) for (let i=1;i<=4;i++) $(id).add(new Option(String(i), String(i)));
+const bindParam = (id, key, parse, live) => {
+  $(id).addEventListener(live ? 'input' : 'change', e => { S.params[key] = parse(e.target.value); if (live) refreshParams(); else commit(); });
+  if (live) $(id).addEventListener('change', commit);
+};
+bindParam('pName', 'part_name', v => v.slice(0,32));
+bindParam('pBlocks', 'expected_blocks', Number);
+bindParam('pMax', 'max_blocks', Number);
+bindParam('pArea', 'min_block_area', Number);
+bindParam('pThr', 'confidence_threshold', v => Math.round(Number(v)*100)/100, true);
+
+const setVal = (el, v) => { if (document.activeElement !== el && el.value !== String(v)) el.value = v; };
+function refreshParams(){
+  const P = S.params;
+  setVal($('pName'), P.part_name); setVal($('pBlocks'), P.expected_blocks); setVal($('pMax'), P.max_blocks);
+  setVal($('pArea'), P.min_block_area); setVal($('pThr'), P.confidence_threshold);
+  $('pThrVal').textContent = P.confidence_threshold.toFixed(2);
+  $('pScrews').textContent = S.rois.length;
+  const bad = !(P.expected_blocks <= P.max_blocks);
+  $('pBlocks').style.borderColor = bad ? 'var(--red)' : ''; $('pMax').style.borderColor = bad ? 'var(--red)' : '';
+  if (S.anchor){
+    const p = anchorPx(S.anchor), a = S.anchor;
+    $('anchorInfo').innerHTML = `锚点：<span class="mono">norm_x=${a.norm_x} norm_y=${a.norm_y} norm_w=${a.norm_w} norm_h=${a.norm_h}</span><br>像素 ${p.x},${p.y} ${p.w}×${p.h} · ref_edge_mean = <b class="mono">${Number.isFinite(refEdge) ? refEdge.toFixed(1) : '—'}</b>${anchorInBounds(a) ? '' : ' <b style="color:var(--red)">越界</b>'}`;
+  } else $('anchorInfo').textContent = '锚点：未设置（在标准视图选择「▭ 方向锚点」后拖拽）';
+  if (S.rect){ setVal($('angle'), S.rect.angle); $('angleVal').textContent = S.rect.angle.toFixed(1)+'°'; }
+}
+let roiSig = '';
+function refreshRoiList(){
+  $('roiCount').textContent = `${S.rois.length} / ${MAX_ROIS}`;
+  const sig = S.rois.length + '|' + (sel?.type === 'roi' ? sel.idx : '-');
+  if (sig !== roiSig){
+    roiSig = sig;
+    const box = $('roiList'); box.innerHTML = '';
+    if (!S.rois.length){ box.innerHTML = '<div class="hint">在标准视图中选择「◯ 标记螺孔」后点击放置。</div>'; }
+    S.rois.forEach((r,i) => {
+      const el = document.createElement('div'); el.className = 'roi'; el.dataset.i = i;
+      el.innerHTML = `
+        <div class="row"><b>#${i+1}</b><input type="text" maxlength="16" data-f="name"><button data-f="del" class="danger" title="删除此孔">🗑</button></div>
+        <div class="row"><span class="k" style="flex:none">半径</span><input type="range" min="0.01" max="0.3" step="0.005" data-f="r"><span class="mono" data-f="rv" style="flex:none;min-width:92px"></span></div>
+        <div class="hint mono" data-f="info"></div>`;
+      el.addEventListener('pointerdown', () => { if (!(sel?.type === 'roi' && sel.idx === i)){ sel = {type:'roi', idx:i}; refreshAll(); } });
+      el.querySelector('[data-f=name]').addEventListener('input', e => { S.rois[i].name = e.target.value.slice(0,16); requestDraw(); });
+      el.querySelector('[data-f=name]').addEventListener('change', commit);
+      el.querySelector('[data-f=r]').addEventListener('input', e => { S.rois[i].norm_r = r4(Number(e.target.value)); requestDraw(); refreshRoiValues(); });
+      el.querySelector('[data-f=r]').addEventListener('change', commit);
+      el.querySelector('[data-f=del]').addEventListener('click', ev => { ev.stopPropagation(); sel = {type:'roi', idx:i}; deleteSelected(); });
+      box.appendChild(el);
+    });
+  }
+  refreshRoiValues();
+}
+function refreshRoiValues(){
+  document.querySelectorAll('#roiList .roi').forEach(el => {
+    const i = Number(el.dataset.i), r = S.rois[i]; if (!r) return;
+    const p = roiPx(r), ok = roiInBounds(r);
+    el.classList.toggle('bad', !ok);
+    el.classList.toggle('sel', sel?.type === 'roi' && sel.idx === i);
+    setVal(el.querySelector('[data-f=name]'), r.name);
+    setVal(el.querySelector('[data-f=r]'), r.norm_r);
+    el.querySelector('[data-f=rv]').textContent = `${r.norm_r.toFixed(3)} → ${p.r}px`;
+    el.querySelector('[data-f=info]').innerHTML = `norm_x=${r.norm_x.toFixed(4)} norm_y=${r.norm_y.toFixed(4)} · 像素 (${p.x}, ${p.y})` +
+      (ok ? '' : `<br><b style="color:var(--red)">越界：需 ${p.r} ≤ x ≤ ${W-1-p.r}，${p.r} ≤ y ≤ ${H-1-p.r}</b>`);
+    if (sel?.type === 'roi' && sel.idx === i){
+      el.scrollIntoView({block:'nearest'});
+    }
+  });
+  $('pScrews').textContent = S.rois.length;
+}
+function refreshChecks(){
+  const v = validate();
+  $('checks').innerHTML = v.map(c => `<li class="${c.ok ? '' : (c.scope === 'deploy' ? 'pend' : 'fail')}">${c.scope === 'deploy' ? '[下发] ' : ''}${escapeHtml(c.text)}</li>`).join('');
+  $('btnDeploy').disabled = deploying || !deployOk(v);
+  $('btnExport').disabled = !saveOk(v);
+  $('btnTrial').disabled = deploying || !(src && S.rect && S.rois.length);
+  $('btnUndo').disabled = !undoStack.length;
+}
+function refreshTrial(){
+  const box = $('trialOut');
+  if (!trial){ box.className = 'hint'; box.innerHTML = '试检用标准合格件（螺丝全部在位）底图，结果为 PASS 后才允许下发。编辑任何参数后需重新试检。'; return; }
+  const t = trial;
+  const rows = t.screws.map((s,i) => `<tr><td>${i+1} ${escapeHtml(S.rois[i]?.name ?? '')}</td><td>${s.patch ? `<img src="${s.patch}" alt="">` : '—'}</td>
+    <td class="mono">${Number.isFinite(s.edge) ? s.edge.toFixed(1) : '—'}</td><td class="mono">${Number.isFinite(s.bright) ? (s.bright*100).toFixed(1)+'%' : '—'}</td>
+    <td class="mono">${s.score.toFixed(2)}</td><td><span class="badge b-${s.status}">${s.status}</span></td></tr>`).join('');
+  const o = t.orient;
+  let orientHtml = '';
+  if (Number.isFinite(o.e0)){
+    const warn = !(Number.isFinite(o.e180)) || o.sep < 0.25;
+    orientHtml = `<div class="msg ${warn ? 'warn' : ''}">锚点边缘能量 0°=${o.e0.toFixed(1)} · 180°对照=${Number.isFinite(o.e180) ? o.e180.toFixed(1) : '—'} · 区分度 ${(o.sep*100).toFixed(0)}%${warn ? '\n区分度低于 25%，设备可能判朝向歧义（CANNOT_INSPECT_ORIENTATION）。建议换一个非对称特征作锚点。' : ''}\n（前端估算，设备 S0/S180 匹配算法以 C++ 实现为准）</div>`;
+  }
+  box.className = '';
+  box.innerHTML = `<div style="display:flex;gap:8px;align-items:center;margin:10px 0"><span class="badge b-${t.block.status}" style="font-size:18px">${t.block.status}</span><span class="mono">${t.block.reason}</span></div>
+    <div style="max-height:280px;overflow-y:auto"><table><thead><tr><th>孔</th><th>Patch</th><th>edge</th><th>高光</th><th>score</th><th>状态</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="hint">门限 ${t.thr.toFixed(2)} · MISSING &lt; 0.35 · Patch ${t.ps.toFixed(0)}px（原图 ${src.width}×${src.height}，按 1920 宽基准 48px 缩放后重采样到 48×48）</div>${orientHtml}`;
+}
+function refreshDevice(){
+  const chip = $('connChip');
+  const mock = $('mockMode').checked;
+  if (device.connected){
+    chip.className = 'chip ' + (mock ? 'demo' : 'ok');
+    chip.textContent = mock ? '演示设备' : `已连接 · rev ${device.profile?.revision ?? '?'}`;
+    $('devConn').textContent = mock ? '离线演示（模拟 Supervisor）' : api.base();
+    $('devProfile').textContent = device.profile ? `rev ${device.profile.revision} · ${device.profile.part_name} · ${device.profile.screw_rois?.length ?? 0} 孔` : '无 / 无法解析';
+    $('devVals').textContent = `${device.values?.confidence_threshold ?? '—'} / ${device.values?.max_blocks ?? '—'}`;
+  } else {
+    chip.className = 'chip'; chip.textContent = mock ? '演示模式（未读取）' : '未连接';
+    $('devConn').textContent = '—'; $('devProfile').textContent = '—'; $('devVals').textContent = '—';
+  }
+  $('btnLoadDev').disabled = !device.profile;
+}
+function refreshAll(){ refreshParams(); refreshRoiList(); refreshChecks(); refreshTrial(); refreshDevice(); requestDraw(); }
+let drawPending = false;
+function requestDraw(){ if (drawPending) return; drawPending = true; requestAnimationFrame(() => { drawPending = false; draw1(); draw2(); }); }
+
+/* ===================== 底图加载 ===================== */
+function setSourceImage(img, presetRect = null){
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth || img.width; c.height = img.naturalHeight || img.height;
+  const cx = c.getContext('2d', {willReadFrequently:true});
+  cx.drawImage(img, 0, 0);
+  src = c;
+  srcGray = null; // 惰性计算
+  if (presetRect) S.rect = presetRect;
+  else if (S.rect && (S.rect.cx > c.width || S.rect.cy > c.height)) S.rect = null;
+  rebuildCanon(); trial = null; commit();
+  toast(`底图 ${c.width}×${c.height} 已加载`);
+}
+function loadFile(file){
+  if (!file || !file.type.startsWith('image/')) return toast('请选择图片文件');
+  const url = URL.createObjectURL(file), img = new Image();
+  img.onload = () => { setSourceImage(img); URL.revokeObjectURL(url); };
+  img.onerror = () => toast('图片无法解码');
+  img.src = url;
+}
+$('btnUpload').onclick = () => $('fileImg').click();
+$('fileImg').onchange = e => { loadFile(e.target.files[0]); e.target.value = ''; };
+const stage1 = $('stage1');
+['dragenter','dragover'].forEach(t => stage1.addEventListener(t, e => { e.preventDefault(); stage1.classList.add('dragover'); }));
+['dragleave','drop'].forEach(t => stage1.addEventListener(t, e => { e.preventDefault(); stage1.classList.remove('dragover'); }));
+stage1.addEventListener('drop', e => loadFile(e.dataTransfer.files[0]));
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => e.preventDefault());
+
+$('btnSnap').onclick = async () => {
+  const btn = $('btnSnap'); btn.disabled = true;
+  try {
+    if ($('mockMode').checked){
+      const m = makeMockScene();
+      setSourceImage(m.canvas, S.rect ? null : m.parts[0]);
+      if (!undoStack.length || !S.anchor) toast('演示底图：已预置左侧合格件的工件框');
+      return;
+    }
+    if (!$('ip').value.trim()) return toast('请先输入相机 IP');
+    toast('正在从 debug_ws 视频流取一帧…');
+    const img = await api.snapshot();
+    setSourceImage(img);
+  } catch (err){
+    toast('抓拍失败：' + err.message + '。可改用「上传图片」');
+  } finally { btn.disabled = false; }
+};
+
+/* ===================== 试检（§3.1 Patch + §4.1 + §4.2） ===================== */
+function runTrial(){
+  if (!src || !S.rect) return toast('请先加载底图并框选工件');
+  if (!S.rois.length) return toast('请先标记螺孔');
+  const thr = S.params.confidence_threshold;
+  const ps = PATCH*src.width/ORIG_W;
+  const pc = document.createElement('canvas'); pc.width = PATCH; pc.height = PATCH;
+  const pctx = pc.getContext('2d', {willReadFrequently:true});
+  pctx.imageSmoothingEnabled = true; pctx.imageSmoothingQuality = 'high';
+  const screws = S.rois.map(r => {
+    const p = roiPx(r), q = canonToSrc(p.x, p.y);
+    const X = Math.round(q.x), Y = Math.round(q.y), half = ps/2;
+    const valid = roiInBounds(r) && X - half >= 0 && X + half < src.width && Y - half >= 0 && Y + half < src.height;
+    if (!valid) return {status:'CANNOT_INSPECT', score:-1.0, edge:NaN, bright:NaN, patch:null, center:[X,Y]};
+    pctx.clearRect(0,0,PATCH,PATCH);
+    pctx.drawImage(src, X - half, Y - half, ps, ps, 0, 0, PATCH, PATCH);
+    const g = toGray(pctx.getImageData(0,0,PATCH,PATCH));
+    const edge = edgeMean(g, PATCH, 0, 0, PATCH, PATCH), bright = brightRatio(g);
+    let score = screwScore(edge, bright);
+    const status = screwStatus(score, thr);
+    if (status === 'CANNOT_INSPECT') score = -1.0;
+    return {status, score, edge, bright, patch: pc.toDataURL(), center:[X,Y]};
+  });
+  const block = aggregateBlock(screws.map(s => s.status));
+  const e0 = refEdge, e180 = anchorEdge180();
+  const sep = Number.isFinite(e0) && Number.isFinite(e180) && e0 > 0 ? (e0 - e180)/Math.max(e0, e180) : NaN;
+  trial = {screws, block, thr, ps, orient:{e0, e180, sep}};
+  refreshAll();
+  toast(`试检结果：${block.status}`);
+}
+$('btnTrial').onclick = runTrial;
+
+/* ===================== 设备 API ===================== */
+const api = {
+  base(){
+    let v = $('ip').value.trim().replace(/\/+$/,'');
+    return /^https?:\/\//.test(v) ? v : 'http://' + v;
+  },
+  host(){ return new URL(this.base()).hostname; },
+  headers(json){
+    const h = {}; const t = $('token').value.trim();
+    if (t) h['Authorization'] = 'Bearer ' + t;
+    if (json) h['Content-Type'] = 'application/json';
+    return h;
+  },
+  async req(path, opt = {}, timeout = HTTP_TIMEOUT_MS){
+    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), timeout);
+    try {
+      const res = await fetch(this.base() + path, {...opt, signal: ac.signal});
+      const text = await res.text();
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${text.slice(0,120)}`);
+      try { return JSON.parse(text); } catch { throw new Error('响应不是 JSON'); }
+    } catch (e){
+      if (e.name === 'AbortError') throw new Error(`请求超时（${timeout}ms）`);
+      if (e instanceof TypeError) throw new Error('网络不可达或被 CORS 拦截（' + e.message + '）');
+      throw e;
+    } finally { clearTimeout(tm); }
+  },
+  async getConfig(){
+    if ($('mockMode').checked) return mock.getConfig();
+    return unwrapValues(await this.req(`/api/appMgr/getConfig?app_id=${encodeURIComponent(APP_ID)}`, {headers:this.headers(false)}));
+  },
+  async setConfig(values, timeout){
+    if ($('mockMode').checked) return mock.setConfig(values);
+    const j = await this.req('/api/appMgr/setConfig', {method:'POST', headers:this.headers(true), body: JSON.stringify({app_id:APP_ID, values})}, timeout);
+    checkCode(j); return j;
+  },
+  openResults(){
+    if ($('mockMode').checked) return new MockWS();
+    return new WebSocket(`ws://${this.host()}:8001/results`);
+  },
+  // 从 debug_ws video_path 取一帧（帧格式需对设备核实：支持二进制 JPEG/PNG 或含 base64 字段的 JSON）
+  snapshot(){
+    return new Promise((resolve, reject) => {
+      let ws, done = false;
+      const fin = (err, img) => { if (done) return; done = true; clearTimeout(tm); try { ws.close(); } catch {} err ? reject(err) : resolve(img); };
+      const tm = setTimeout(() => fin(new Error('4 秒内未收到视频帧')), 4000);
+      try { ws = new WebSocket(`ws://${this.host()}:8001/`); } catch (e){ return fin(e); }
+      ws.binaryType = 'blob';
+      ws.onerror = () => fin(new Error('视频 WebSocket 连接失败'));
+      ws.onmessage = async ev => {
+        try {
+          let blob = null;
+          if (ev.data instanceof Blob) blob = ev.data;
+          else {
+            const j = JSON.parse(ev.data), b64 = j.image || j.frame || j.data || j.jpeg;
+            if (typeof b64 !== 'string') return; // 非图像消息，继续等
+            const b = b64.startsWith('data:') ? b64 : 'data:image/jpeg;base64,' + b64;
+            blob = await (await fetch(b)).blob();
+          }
+          const img = await blobToImage(blob);
+          fin(null, img);
+        } catch { /* 非图像帧，继续等 */ }
+      };
+    });
+  },
+};
+function checkCode(j){
+  if (j && typeof j === 'object' && 'code' in j && j.code !== 0 && j.code !== 200)
+    throw new Error(`设备返回 code=${j.code} ${j.msg || j.message || ''}`.trim());
+}
+// 兼容多种包装：{code,data:{values}} / {values} / {data:{...}}
+function unwrapValues(j){
+  checkCode(j);
+  const cands = [j?.data?.values, j?.values, j?.data?.config, j?.config, j?.data];
+  for (const v of cands) if (v && typeof v === 'object' && !Array.isArray(v)) return v;
+  throw new Error('无法从 getConfig 响应中解析 values');
+}
+function parseProfile(v){
+  if (v == null) return null;
+  try { const p = typeof v === 'string' ? JSON.parse(v) : v; return p && typeof p === 'object' ? p : null; } catch { return null; }
+}
+function blobToImage(blob){
+  return new Promise((res, rej) => { const u = URL.createObjectURL(blob), im = new Image(); im.onload = () => { URL.revokeObjectURL(u); res(im); }; im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('帧无法解码')); }; im.src = u; });
+}
+const OVERALL_STATUS = ['PASS','DEFECT','CANNOT_INSPECT'];
+const OVERALL_REASON = ['OK','DEFECT_UNDER_COUNT','DEFECT_OVER_COUNT','DEFECT_MISSING_SCREW','CANNOT_INSPECT_ORIENTATION','CANNOT_INSPECT_ROI_OOB','CANNOT_INSPECT_LOW_CONFIDENCE'];
+const BLOCK_REASON = ['OK','MISSING_SCREW','CANNOT_INSPECT_ORIENTATION','CANNOT_INSPECT_ROI_OOB','CANNOT_INSPECT_LOW_CONFIDENCE','UNINSPECTED_OVER_CAPACITY'];
+const ORIENTATION = ['0_DEG_CONFIRMED','180_DEG_CONFIRMED','ORIENTATION_AMBIGUOUS'];
+const SCREW_STATUS = ['PRESENT','MISSING','UNCERTAIN','CANNOT_INSPECT'];
+const SUMMARY_REQUIRED = ['expected_blocks','actual_blocks','passed_blocks','defect_blocks','cannot_inspect_blocks'];
+const BLOCK_REQUIRED = ['block_id','bbox_xywh','angle_deg','orientation','status','reason','expected_screws','actual_screws','screws'];
+const SCREW_REQUIRED = ['id','name','status','score','roi_center_xy'];
+const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+const isNum = v => typeof v === 'number' && Number.isFinite(v);
+const isInt = (v, min = -Infinity, max = Infinity) => Number.isInteger(v) && v >= min && v <= max;
+const isNumArr = (v, n) => Array.isArray(v) && v.length === n && v.every(isNum);
+const missing = (o, keys) => keys.filter(k => !(k in o));
+// SPEC §5.1 ScrewGuardResultPayload（Draft-07）结构校验；返回首个错误
+function payloadError(p){
+  if (!isObj(p)) return '顶层不是对象';
+  let m = missing(p, RESULT_REQUIRED); if (m.length) return '缺少字段 ' + m.join(',');
+  if (p.schema_version !== '2.4') return `schema_version=${JSON.stringify(p.schema_version)}`;
+  for (const k of ['device_id','app_version','cycle_id']) if (typeof p[k] !== 'string') return `${k} 不是 string`;
+  if (!isInt(p.applied_revision, 1)) return 'applied_revision 不是 ≥1 的整数';
+  if (!isInt(p.frame_id, 0)) return 'frame_id 不是 ≥0 的整数';
+  if (!isNum(p.timestamp)) return 'timestamp 不是 number';
+  if (!OVERALL_STATUS.includes(p.overall_status)) return `overall_status=${JSON.stringify(p.overall_status)} 不在枚举内`;
+  if (!OVERALL_REASON.includes(p.overall_reason)) return `overall_reason=${JSON.stringify(p.overall_reason)} 不在枚举内`;
+  const sm = p.summary;
+  if (!isObj(sm)) return 'summary 不是非 null 对象';
+  m = missing(sm, SUMMARY_REQUIRED); if (m.length) return 'summary 缺少 ' + m.join(',');
+  if (!isInt(sm.expected_blocks, 1, 4)) return 'summary.expected_blocks 不在 1~4';
+  for (const k of SUMMARY_REQUIRED.slice(1)) if (!isInt(sm[k], 0)) return `summary.${k} 不是 ≥0 的整数`;
+  if (!Array.isArray(p.blocks)) return 'blocks 不是数组';
+  for (let i = 0; i < p.blocks.length; i++){
+    const b = p.blocks[i], at = `blocks[${i}]`;
+    if (!isObj(b)) return `${at} 不是对象`;
+    m = missing(b, BLOCK_REQUIRED); if (m.length) return `${at} 缺少 ` + m.join(',');
+    if (!isInt(b.block_id, 1)) return `${at}.block_id 非法`;
+    if (!isNumArr(b.bbox_xywh, 4)) return `${at}.bbox_xywh 必须为 4 个 number`;
+    if (!isNum(b.angle_deg)) return `${at}.angle_deg 非法`;
+    if (!ORIENTATION.includes(b.orientation)) return `${at}.orientation 不在枚举内`;
+    if (!OVERALL_STATUS.includes(b.status)) return `${at}.status 不在枚举内`;
+    if (!BLOCK_REASON.includes(b.reason)) return `${at}.reason 不在枚举内`;
+    if (!isInt(b.expected_screws, 1, MAX_ROIS)) return `${at}.expected_screws 不在 1~${MAX_ROIS}`;
+    if (!isInt(b.actual_screws, 0, MAX_ROIS)) return `${at}.actual_screws 不在 0~${MAX_ROIS}`;
+    if (!Array.isArray(b.screws)) return `${at}.screws 不是数组`;
+    for (let j = 0; j < b.screws.length; j++){
+      const s = b.screws[j], sat = `${at}.screws[${j}]`;
+      if (!isObj(s)) return `${sat} 不是对象`;
+      m = missing(s, SCREW_REQUIRED); if (m.length) return `${sat} 缺少 ` + m.join(',');
+      if (!isInt(s.id, 1)) return `${sat}.id 非法`;
+      if (typeof s.name !== 'string') return `${sat}.name 不是 string`;
+      if (!SCREW_STATUS.includes(s.status)) return `${sat}.status 不在枚举内`;
+      if (!isNum(s.score) || s.score < -1 || s.score > 1) return `${sat}.score 不在 -1~1`;
+      if (!isNumArr(s.roi_center_xy, 2)) return `${sat}.roi_center_xy 必须为 2 个 number`;
+    }
+  }
+  return null;
+}
+function validatePayload(data){
+  if (typeof data !== 'string') return {ok:false, err:'非文本报文'};
+  let p; try { p = JSON.parse(data); } catch { return {ok:false, err:'JSON 解析失败'}; }
+  const err = payloadError(p);
+  return err ? {ok:false, err} : {ok:true, p};
+}
+
+/* ===================== 连接 ===================== */
+async function connect(){
+  const mockOn = $('mockMode').checked;
+  if (!mockOn && !$('ip').value.trim()) return toast('请输入相机 IP');
+  if (!mockOn) localStorage.setItem('sg.ip', $('ip').value.trim());
+  const btn = $('btnConnect'); btn.disabled = true; $('connChip').className = 'chip'; $('connChip').textContent = '读取中…';
+  try {
+    const values = await api.getConfig();
+    device.values = values; device.connected = true;
+    device.profile = parseProfile(values.profile_json);
+    device.maxRevSeen = Math.max(device.maxRevSeen, device.profile?.revision || 0);
+    const pristine = !S.anchor && !S.rois.length;
+    if (pristine && device.profile) loadProfileIntoEditor(device.profile, values);
+    toast(device.profile ? `已读取设备配方 rev ${device.profile.revision}${pristine ? '，已载入编辑区' : ''}` : '已连接，但设备未返回可解析的 profile_json');
+  } catch (err){
+    device.connected = false;
+    toast('读取失败：' + err.message);
+    $('connChip').className = 'chip err'; $('connChip').textContent = '连接失败';
+    refreshChecks(); btn.disabled = false; return;
+  }
+  btn.disabled = false; refreshAll();
+}
+$('btnConnect').onclick = connect;
+$('btnLoadDev').onclick = () => { if (device.profile){ loadProfileIntoEditor(device.profile, device.values); toast('已载入设备配方（可撤销）'); } };
+$('mockMode').onchange = () => { device.connected = false; device.values = null; device.profile = null; refreshAll(); };
+
+function loadProfileIntoEditor(p, values){
+  const errs = checkProfileShape(p);
+  if (errs.length) return toast('配方格式错误：' + errs[0]);
+  if (Array.isArray(p.canonical_size) && p.canonical_size.length === 2){
+    const [cw, ch] = p.canonical_size;
+    if (Number.isFinite(cw) && Number.isFinite(ch) && cw >= 30 && ch >= 30){
+      setCanonSize(cw, ch);
+      if (canonValid) rebuildCanon(true);
+    }
+  }
+  S.anchor = { norm_x:+p.anchor.norm_x, norm_y:+p.anchor.norm_y, norm_w:+p.anchor.norm_w, norm_h:+p.anchor.norm_h };
+  S.rois = p.screw_rois.map((r,i) => ({ id:i+1, name:String(r.name), norm_x:+r.norm_x, norm_y:+r.norm_y, norm_r:+r.norm_r }));
+  S.params = {
+    part_name: String(p.part_name ?? S.params.part_name).slice(0,32),
+    expected_blocks: Number(p.expected_blocks ?? S.params.expected_blocks),
+    min_block_area: Number(p.min_block_area ?? S.params.min_block_area),
+    max_blocks: Number(values?.max_blocks ?? S.params.max_blocks),
+    confidence_threshold: Number(values?.confidence_threshold ?? S.params.confidence_threshold),
+  };
+  if (Number.isFinite(p.revision)) device.maxRevSeen = Math.max(device.maxRevSeen, p.revision);
+  sel = null; roiSig = ''; updateRefEdge(); commit();
+}
+function checkProfileShape(p){
+  const e = [], num = v => typeof v === 'number' && Number.isFinite(v);
+  if (!p || typeof p !== 'object') return ['不是对象'];
+  for (const k of ['revision','part_name','expected_blocks','expected_screws_per_block','canonical_size','min_block_area','anchor','screw_rois'])
+    if (!(k in p)) e.push(`缺少字段 ${k}`);
+  if (!Number.isInteger(p.revision) || p.revision < 1) e.push('revision 必须为 ≥1 整数');
+  if (typeof p.part_name !== 'string' || !p.part_name.trim()) e.push('part_name 必须为非空字符串');
+  if (!Number.isInteger(p.expected_blocks) || p.expected_blocks < 1 || p.expected_blocks > 4) e.push('expected_blocks 必须为 1~4 整数');
+  if (!Number.isInteger(p.expected_screws_per_block) || p.expected_screws_per_block < 1 || p.expected_screws_per_block > MAX_ROIS) e.push(`expected_screws_per_block 必须为 1~${MAX_ROIS} 整数`);
+  if (!Array.isArray(p.canonical_size) || p.canonical_size.length !== 2 || !p.canonical_size.every(v => Number.isInteger(v) && v >= 30 && v <= 1280)) e.push('canonical_size 必须为两个 30~1280 整数');
+  if (!num(p.min_block_area) || p.min_block_area <= 0) e.push('min_block_area 必须 > 0');
+  const a = p.anchor;
+  if (!a || !['norm_x','norm_y','norm_w','norm_h'].every(k => num(a[k]))) e.push('anchor 缺少 norm_x/norm_y/norm_w/norm_h');
+  else if (a.norm_x < 0 || a.norm_x > 1 || a.norm_y < 0 || a.norm_y > 1 || a.norm_w <= 0 || a.norm_w > 1 || a.norm_h <= 0 || a.norm_h > 1) e.push('anchor 归一化范围非法');
+  if (!Array.isArray(p.screw_rois) || p.screw_rois.length < 1 || p.screw_rois.length > MAX_ROIS) e.push(`screw_rois 必须为 1~${MAX_ROIS} 项`);
+  else p.screw_rois.forEach((r,i) => {
+    if (!r || !Number.isInteger(r.id) || r.id < 1 || typeof r.name !== 'string' || !['norm_x','norm_y','norm_r'].every(k => num(r[k]))) e.push(`screw_rois[${i}] 字段缺失或类型非法`);
+    else if (r.norm_x < 0 || r.norm_x > 1 || r.norm_y < 0 || r.norm_y > 1 || r.norm_r <= 0 || r.norm_r > 0.5) e.push(`screw_rois[${i}] 归一化范围非法`);
+  });
+  if (num(p.expected_screws_per_block) && Array.isArray(p.screw_rois) && p.expected_screws_per_block !== p.screw_rois.length)
+    e.push(`INVALID_PROFILE_SCREWS_MISMATCH：expected_screws_per_block=${p.expected_screws_per_block} ≠ ${p.screw_rois.length}`);
+  return e;
+}
+
+/* ===================== 下发（§2.2 Read-Merge-Write + 生效确认） ===================== */
+function setDeployUI(state, text, frac){
+  const msg = $('depMsg');
+  msg.className = 'msg' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : state === 'warn' ? ' warn' : '');
+  msg.textContent = text;
+  $('depProg').classList.toggle('hidden', frac == null);
+  if (frac != null) $('depProg').firstElementChild.style.width = (clamp(frac,0,1)*100).toFixed(0) + '%';
+  $('depFailBtns').classList.toggle('hidden', state !== 'err');
+  $('btnRollback').disabled = !lastDeploy?.rollbackValues;
+}
+// t0 = 下发前的 Date.now()；deadline 为绝对截止时刻，tick 与 onmessage 共用
+function waitApplied(rev, t0, label){
+  const deadline = t0 + APPLY_TIMEOUT_MS;
+  return new Promise(resolve => {
+    let ws = null, wsStart = 0, everOpen = false, gotMsg = false, lastBad = null, done = false, attempts = 0;
+    const finish = r => { if (done) return; done = true; clearInterval(timer); try { ws && ws.close(); } catch {} resolve(r); };
+    const tick = () => {
+      const el = Date.now() - t0;
+      if (Date.now() >= deadline){
+        let reason;
+        if (lastBad) reason = lastBad;
+        else if (everOpen) reason = '② debug_ws 已连接，但 6 秒内未收到任何结果报文';
+        else reason = `① 6 秒内未能建立 debug_ws 连接（尝试 ${attempts} 次）`;
+        return finish({ok:false, reason});
+      }
+      setDeployUI('', `${label}：等待应用重启并回报 applied_revision=${rev}…  ${(el/1000).toFixed(1)}s / 6.0s\n连接尝试 ${attempts} 次${everOpen ? ' · 已连上' : ''}${gotMsg ? ' · 已收报文' : ''}`, el/APPLY_TIMEOUT_MS);
+      const stalled = ws && ws.readyState === 0 && performance.now() - wsStart > WS_CONNECT_STALL_MS;
+      if (!ws || ws.readyState === 3 || stalled){
+        if (stalled) try { ws.close(); } catch {}
+        wsStart = performance.now(); attempts++;
+        let me;
+        try { me = ws = api.openResults(); } catch { ws = null; return; }
+        me.onopen = () => { everOpen = true; };
+        me.onmessage = ev => {
+          if (Date.now() >= deadline) return; // 截止后到达的报文一律丢弃，交给 tick 熔断
+          if (me !== ws || done) return;
+          gotMsg = true;
+          const v = validatePayload(ev.data);
+          if (!v.ok){ lastBad = '③ 报文非法：' + v.err; return; }
+          if (v.p.applied_revision !== rev){
+            lastBad = `③ applied_revision=${v.p.applied_revision} ≠ 下发 revision=${rev}`;
+            if (FAIL_FAST_ON_REV_MISMATCH) finish({ok:false, reason:lastBad});
+            return;
+          }
+          finish({ok:true, payload:v.p, elapsed: Date.now() - t0});
+        };
+      }
+    };
+    const timer = setInterval(tick, POLL_MS); tick();
+  });
+}
+async function deploy(){
+  const v = validate();
+  if (!deployOk(v)) return toast('下发条件未满足：' + v.find(c => !c.ok).text);
+  deploying = true; refreshChecks();
+  try {
+    setDeployUI('', '① 读取设备当前完整配置（Read）…', 0);
+    const fresh = await api.getConfig();
+    const freshProfile = parseProfile(fresh.profile_json);
+    device.values = fresh; device.profile = freshProfile;
+    device.maxRevSeen = Math.max(device.maxRevSeen, freshProfile?.revision || 0);
+    const rev = device.maxRevSeen + 1;
+    const profileStr = JSON.stringify(buildProfile(rev));
+    if (utf8Len(profileStr) > PROFILE_MAX_BYTES) throw new Error(`profile_json 超过 ${PROFILE_MAX_BYTES} 字节`);
+    const merged = {...fresh, profile_json: profileStr, confidence_threshold: S.params.confidence_threshold, max_blocks: S.params.max_blocks};
+    // 连续失败重试时保留首次失败前的快照，避免回退到一份未生效的草稿
+    const keep = lastDeploy?.failed ? lastDeploy : null;
+    lastDeploy = { rollbackValues: keep ? keep.rollbackValues : fresh, rollbackRev: keep ? keep.rollbackRev : (freshProfile?.revision ?? null), merged, rev, failed: true };
+    setDeployUI('', `② 合并并写入（Merge-Write）revision=${rev}…`, 0);
+    const t0 = Date.now();
+    await api.setConfig(merged, APPLY_TIMEOUT_MS);
+    device.maxRevSeen = rev;
+    const r = await waitApplied(rev, t0, '③ 生效确认');
+    if (r.ok){
+      device.profile = JSON.parse(profileStr); device.values = merged; lastDeploy.failed = false;
+      setDeployUI('ok', `新配方已在设备运行生效\nrevision=${rev} · 用时 ${(r.elapsed/1000).toFixed(2)}s · 首帧 overall_status=${r.payload.overall_status}`, 1);
+      toast('下发成功，已生效');
+    } else {
+      setDeployUI('err', `生效失败（6 秒熔断）\n${r.reason}\n可【重新提交】或【回退配置】到 rev ${lastDeploy.rollbackRev ?? '?'}`, 1);
+    }
+  } catch (err){
+    setDeployUI('err', '下发失败：' + err.message, null);
+  } finally { deploying = false; refreshAll(); }
+}
+async function rollback(){
+  if (!lastDeploy?.rollbackValues) return toast('没有可回退的配置快照');
+  deploying = true; refreshChecks();
+  try {
+    const vals = lastDeploy.rollbackValues, rev = parseProfile(vals.profile_json)?.revision;
+    setDeployUI('', `回退：写回下发前读取的完整配置（rev ${rev ?? '?'}）…`, 0);
+    const t0 = Date.now();
+    await api.setConfig(vals, APPLY_TIMEOUT_MS);
+    if (!Number.isInteger(rev)){ setDeployUI('warn', '已写回旧配置，但旧配置无 revision，无法自动确认生效，请人工查看设备画面。', null); return; }
+    const r = await waitApplied(rev, t0, '回退确认');
+    if (r.ok){ device.values = vals; device.profile = parseProfile(vals.profile_json); lastDeploy.failed = false; setDeployUI('ok', `已回退并确认生效：rev ${rev}`, 1); }
+    else setDeployUI('err', `回退后生效确认失败：${r.reason}`, 1);
+  } catch (err){ setDeployUI('err', '回退失败：' + err.message, null); }
+  finally { deploying = false; refreshAll(); }
+}
+$('btnDeploy').onclick = deploy;
+$('btnRetry').onclick = deploy;
+$('btnRollback').onclick = rollback;
+
+/* ===================== 导出 / 导入 / 重置 ===================== */
+$('btnExport').onclick = () => {
+  const v = validate();
+  if (!saveOk(v)) return toast('无法导出：' + v.find(c => !c.ok && c.scope === 'save').text);
+  const profile = buildProfile(device.maxRevSeen + 1);
+  const doc = { format:'screw-guard-calib/1', exported_at: new Date().toISOString(), profile,
+    confidence_threshold: S.params.confidence_threshold, max_blocks: S.params.max_blocks,
+    part_rect: S.rect, profile_json: JSON.stringify(profile) };
+  const blob = new Blob([JSON.stringify(doc, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `screw-guard-${(S.params.part_name || 'part').replace(/[^\w一-龥-]+/g,'_')}-r${profile.revision}.json`;
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('已导出 ' + a.download);
+};
+$('btnImport').onclick = () => $('fileImport').click();
+$('fileImport').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    // 支持：本工具导出格式 / 裸 profile / {values:{profile_json}}
+    const profile = j.profile || parseProfile(j.values?.profile_json) || parseProfile(j.profile_json) || j;
+    const values = { confidence_threshold: j.confidence_threshold ?? j.values?.confidence_threshold, max_blocks: j.max_blocks ?? j.values?.max_blocks };
+    const errs = checkProfileShape(profile);
+    if (errs.length) throw new Error(errs.join('；'));
+    if (Array.isArray(profile.canonical_size) && profile.canonical_size.length === 2){
+      setCanonSize(profile.canonical_size[0], profile.canonical_size[1]);
+    }
+    if (j.part_rect && src) S.rect = j.part_rect;
+    rebuildCanon(!!profile.canonical_size);
+    loadProfileIntoEditor(profile, values);
+    toast('已导入配方（可撤销）');
+  } catch (err){ toast('导入失败：' + err.message); }
+};
+$('btnReset').onclick = () => {
+  S.rect = null; S.anchor = null; S.rois = []; S.params = {...DEFAULT_PARAMS};
+  sel = null; roiSig = ''; setCanonSize(300, 200); rebuildCanon(); commit(); toast('已重置标定（底图保留，可撤销）');
+};
+$('btnUndo').onclick = undo;
+
+/* ===================== 键盘 ===================== */
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement?.tagName;
+  const typing = tag === 'INPUT' && !['range','checkbox'].includes(document.activeElement.type) || tag === 'SELECT';
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z'){ if (!typing){ e.preventDefault(); undo(); } return; }
+  if (typing) return;
+  if (e.key === 'Delete' || e.key === 'Backspace'){ e.preventDefault(); deleteSelected(); return; }
+  if (e.key === 'Escape'){ setTool('select'); sel = null; refreshAll(); return; }
+  if (e.key === '1') return setTool('select');
+  if (e.key === '2') return setTool('anchor');
+  if (e.key === '3') return setTool('screw');
+  const dir = {ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1]}[e.key];
+  if (dir && sel){
+    e.preventDefault();
+    const step = e.shiftKey ? 5 : 1;
+    if (sel.type === 'roi'){
+      const r = S.rois[sel.idx];
+      r.norm_x = r4(clamp((roiPx(r).x + dir[0]*step)/(W-1), 0, 1));
+      r.norm_y = r4(clamp((roiPx(r).y + dir[1]*step)/(H-1), 0, 1));
+    } else if (S.anchor){
+      const p = anchorPx(S.anchor);
+      S.anchor = anchorFromPx(p.x + dir[0]*step, p.y + dir[1]*step, p.w, p.h);
+      updateRefEdge();
+    }
+    nudging = true;
+    trial = null;            // 位置已变，旧试检结果立即失效（下发按钮同步禁用）
+    requestDraw(); refreshRoiValues(); refreshParams(); refreshChecks();
+  }
+});
+// 一次按住/连按的方向键微调只入一次撤销栈
+let nudging = false;
+const endNudge = () => { if (nudging){ nudging = false; commit(); } };
+document.addEventListener('keyup', e => { if (e.key.startsWith('Arrow')) endNudge(); });
+window.addEventListener('blur', endNudge);
+
+/* ===================== 离线演示：合成底图 + 模拟 Supervisor ===================== */
+function drawMockPart(c, rect, present){
+  c.save();
+  c.translate(rect.cx, rect.cy); c.rotate(deg2rad(rect.angle)); c.scale(rect.w/W, rect.h/H); c.translate(-W/2, -H/2);
+  c.fillStyle = '#6b6f74'; c.strokeStyle = '#3d4146'; c.lineWidth = 2;
+  c.beginPath(); c.roundRect(3, 3, W-6, H-6, 14); c.fill(); c.stroke();
+  c.fillStyle = '#5d6166'; c.beginPath(); c.roundRect(200, 130, 80, 50, 8); c.fill(); // 非对称凸台
+  c.fillStyle = '#15171a'; c.fillRect(23, 75, 44, 50);                               // 锚点：深色方槽
+  c.strokeStyle = '#c4c8cc'; c.lineWidth = 2; c.strokeRect(23, 75, 44, 50);
+  [[0.283, 0.700], [0.600, 0.450]].forEach(([nx, ny], i) => {
+    const x = nx*(W-1), y = ny*(H-1);
+    if (present[i]){
+      const g = c.createRadialGradient(x-3, y-3, 1, x, y, 10);
+      g.addColorStop(0, '#fbfcfd'); g.addColorStop(1, '#a3a8ad');
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, 10, 0, Math.PI*2); c.fill();
+      c.strokeStyle = '#2b2e32'; c.lineWidth = 2.5; c.beginPath();
+      c.moveTo(x-6, y); c.lineTo(x+6, y); c.moveTo(x, y-6); c.lineTo(x, y+6); c.stroke();
+    } else {
+      c.fillStyle = '#44484d'; c.beginPath(); c.arc(x, y, 6, 0, Math.PI*2); c.fill();
+    }
+  });
+  c.restore();
+}
+function makeMockScene(){
+  const cv = document.createElement('canvas'); cv.width = 1920; cv.height = 1080;
+  const c = cv.getContext('2d', {willReadFrequently:true});
+  c.fillStyle = '#2f3439'; c.fillRect(0, 0, cv.width, cv.height);
+  const parts = [ {cx:620, cy:560, w:600, h:400, angle:12}, {cx:1380, cy:520, w:600, h:400, angle:-9} ];
+  drawMockPart(c, parts[0], [true, true]);
+  drawMockPart(c, parts[1], [false, true]);
+  const id = c.getImageData(0, 0, cv.width, cv.height), d = id.data;
+  let seed = 12345; const rnd = () => (seed = (seed*1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  for (let i=0;i<d.length;i+=4){ const n = (rnd() - 0.5)*10; d[i] += n; d[i+1] += n; d[i+2] += n; }
+  c.putImageData(id, 0, 0);
+  return {canvas: cv, parts};
+}
+const mock = {
+  values: {...DEFAULT_VALUES},
+  restartAt: 0,
+  getConfig(){ return new Promise(r => setTimeout(() => r(JSON.parse(JSON.stringify(this.values))), 150)); },
+  setConfig(v){
+    return new Promise(r => setTimeout(() => { this.prevRev = parseProfile(this.values.profile_json)?.revision || 1; this.values = JSON.parse(JSON.stringify(v)); this.restartAt = performance.now(); r({code:0, msg:'ok'}); }, 200));
+  },
+};
+class MockWS {
+  constructor(){
+    this.readyState = 0; this.onopen = this.onmessage = this.onerror = this.onclose = null;
+    const fault = $('mockFault').value, sinceRestart = performance.now() - mock.restartAt;
+    const down = sinceRestart < 900; // 模拟应用重启窗口
+    this._t = setTimeout(() => {
+      if (fault === 'refused' || down){ this.readyState = 3; this.onerror?.({}); this.onclose?.({}); return; }
+      this.readyState = 1; this.onopen?.({});
+      if (fault === 'silent') return;
+      const rev = fault === 'mismatch' ? (mock.prevRev || 1) : (parseProfile(mock.values.profile_json)?.revision || 1);
+      this._i = setInterval(() => this.onmessage?.({data: JSON.stringify({
+        schema_version:'2.4', device_id:'recamera-demo', app_version:'1.0.0', applied_revision: rev,
+        cycle_id:'cyc_demo', frame_id: Math.floor(performance.now()), timestamp: Date.now()/1000,
+        overall_status:'PASS', overall_reason:'OK',
+        summary:{expected_blocks:2, actual_blocks:2, passed_blocks:2, defect_blocks:0, cannot_inspect_blocks:0}, blocks:[] })}), 300);
+    }, 120);
+  }
+  close(){ clearTimeout(this._t); clearInterval(this._i); this.readyState = 3; }
+}
+
+/* ===================== 杂项 / 初始化 ===================== */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+let toastTimer = null;
+function toast(t){ const el = $('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600); }
+function fitCanvas(cv){
+  const ro = new ResizeObserver(() => {
+    const b = cv.parentElement.getBoundingClientRect();
+    cv.width = Math.max(1, Math.round(b.width*dpr())); cv.height = Math.max(1, Math.round(b.height*dpr()));
+    requestDraw();
+  });
+  ro.observe(cv.parentElement);
+}
+fitCanvas(cv1); fitCanvas(cv2);
+(function init(){
+  const qs = new URLSearchParams(location.search);
+  const saved = localStorage.getItem('sg.ip');
+  const hostIp = location.protocol === 'http:' && !['localhost','127.0.0.1',''].includes(location.hostname) ? location.host : '';
+  $('ip').value = qs.get('ip') || saved || hostIp;
+  if (qs.has('demo')) $('mockMode').checked = true;
+  if (location.protocol === 'https:') toast('注意：HTTPS 页面无法连接 ws:// 与 http:// 设备，请用 http 打开本页');
+  setCanonSize(300, 200);
+  committed = snap();
+  refreshAll();
+})();
+</script>
+</body>
+</html>
