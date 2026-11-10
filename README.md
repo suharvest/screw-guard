@@ -107,7 +107,7 @@ Prerequisites: CMake >= 3.16, GCC/Clang with C++17 support, OpenCV >= 4.5.
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/Seeed-Studio/screw-guard.git
+git clone https://github.com/suharvest/screw-guard.git
 cd screw-guard/native
 
 # 2. Build library, test suites, and CLI
