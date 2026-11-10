@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "purge" ] || [ "$1" = "remove" ]; then
+    rm -f /userdata/local/apps/screw-guard.json
+    rm -rf /usr/lib/screw-guard
+fi
+
+exit 0

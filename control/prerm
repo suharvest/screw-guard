@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+if [ -x /etc/init.d/K95screw-guard ]; then
+    /etc/init.d/K95screw-guard stop || true
+fi
+
+exit 0

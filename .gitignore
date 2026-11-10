@@ -4,6 +4,8 @@ __pycache__/
 *.py[cod]
 
 # Native and device build trees
+build/
+packages/
 native/build*/
 device/build*/
 

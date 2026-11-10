@@ -1,0 +1,26 @@
+#!/bin/sh
+set -e
+
+echo "Installing Microduck ScrewGuard package..."
+
+mkdir -p /userdata/local/apps
+mkdir -p /usr/share/supervisor/apps
+mkdir -p /usr/lib/screw-guard
+
+# Deploy App Gallery manifest to active supervisor apps directory
+if [ -f /usr/share/supervisor/apps/screw-guard.json ]; then
+    cp -f /usr/share/supervisor/apps/screw-guard.json /userdata/local/apps/screw-guard.json
+fi
+
+# Ensure executable permissions for init script
+if [ -f /etc/init.d/K95screw-guard ]; then
+    chmod 755 /etc/init.d/K95screw-guard
+fi
+
+# Ensure no S-prefixed script exists to avoid camera/VPSS boot conflict
+rm -f /etc/init.d/S95screw-guard
+
+sync
+
+echo "Microduck ScrewGuard installed successfully."
+exit 0

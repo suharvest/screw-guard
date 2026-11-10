@@ -1,0 +1,56 @@
+#!/bin/sh
+APP=/usr/local/bin/screw-guard
+PIDFILE=/var/run/screw-guard.pid
+CONFIG=/userdata/local/apps/screw-guard.config.json
+export LD_LIBRARY_PATH=/usr/lib/screw-guard:/mnt/system/lib:/mnt/system/usr/lib:/mnt/system/usr/lib/3rd:/mnt/system/lib/3rd:/lib:/usr/lib
+
+owned() {
+    case "$pid" in ''|*[!0-9]*) return 1 ;; esac
+    [ "$pid" -gt 1 ] && [ "$(readlink "/proc/$pid/exe")" = "$APP" ] && kill -0 "$pid" 2>/dev/null
+}
+read_pid() { pid=; [ ! -f "$PIDFILE" ] || read -r pid < "$PIDFILE"; }
+case "$1" in
+  start)
+    [ -x "$APP" ] && [ -r "$CONFIG" ] || { echo "Missing executable or configuration" >&2; exit 1; }
+    read_pid
+    owned && exit 0
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+      echo "PID file refers to another process; refusing start" >&2; exit 1
+    fi
+    for entry in /proc/[0-9]*/exe; do
+      if [ "$(readlink "$entry")" = "$APP" ]; then
+        echo "Untracked screw-guard process; refusing duplicate start" >&2; exit 1
+      fi
+    done
+    "$APP" --config "$CONFIG" >> /var/log/screw-guard.log 2>&1 &
+    pid=$!
+    (umask 022; echo "$pid" > "$PIDFILE") || exit 1
+    sleep 1
+    owned || { echo "screw-guard failed to remain running" >&2; exit 1; }
+    ;;
+  stop)
+    read_pid
+    if ! owned; then
+      if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        echo "PID file identity mismatch; refusing stop" >&2; exit 1
+      fi
+      # A missing PID file is not proof of absence. Detect only our executable.
+      for entry in /proc/[0-9]*/exe; do
+        if [ "$(readlink "$entry")" = "$APP" ]; then
+          echo "Untracked screw-guard process; stop not confirmed" >&2; exit 1
+        fi
+      done
+      rm -f "$PIDFILE"
+      exit 0
+    fi
+    kill -TERM "$pid" || exit 1
+    i=0
+    while owned && [ "$i" -lt 14 ]; do sleep 1; i=$((i + 1)); done
+    if owned; then echo "screw-guard did not stop within 14 seconds" >&2; exit 1; fi
+    rm -f "$PIDFILE"
+    echo "screw-guard stopped"
+    ;;
+  restart) "$0" stop && "$0" start; exit $? ;;
+  *) echo "Usage: $0 {start|stop|restart}" >&2; exit 1 ;;
+esac
+exit 0

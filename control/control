@@ -1,0 +1,7 @@
+Package: screw-guard
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: riscv64
+Maintainer: Seeed Studio <support@seeed.cc>
+Description: Microduck Assembly Screw Missing & Presence Inspector for reCamera SG2002
